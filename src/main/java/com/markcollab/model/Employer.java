@@ -2,27 +2,14 @@ package com.markcollab.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Entity
 @Table(name = "employers")
 @Data
-public class Employer {
+@EqualsAndHashCode(callSuper = true)
+public class Employer extends AbstractUser {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    @Column(nullable = false)
-    private String name;
-
-    @Column(nullable = false, unique = true)
-    private String username;
-
-    @Column(nullable = false, unique = true)
-    private String email;
-
-    @Column(nullable = false, unique = true)
-    private String cpf;
-
+    @Column(nullable = true)
     private String companyName;
 }
