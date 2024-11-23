@@ -3,10 +3,9 @@ package com.markcollab.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
-@Entity
-@Table(name = "users_view") // Uma visão consolidada (ou lógica)
+@MappedSuperclass
 @Data
-public class User {
+public abstract class AbstractUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

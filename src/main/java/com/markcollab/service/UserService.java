@@ -4,6 +4,7 @@ import com.markcollab.model.Employer;
 import com.markcollab.model.Freelancer;
 import com.markcollab.repository.EmployerRepository;
 import com.markcollab.repository.FreelancerRepository;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,15 +20,48 @@ public class UserService {
     @Autowired
     private EmployerRepository employerRepository;
 
+
+    // Método de teste para salvar manualmente um Freelancer
+    @PostConstruct
+    public void testSaveFreelancer() {
+        try {
+            Freelancer freelancer = new Freelancer();
+            freelancer.setName("Jane Doe");
+            freelancer.setUsername("jane_doe");
+            freelancer.setEmail("jane.doe@example.com");
+            freelancer.setCpf("98765432100");
+            freelancer.setPortfolioLink("http://portfolio.example.com");
+            freelancer.setRole("FREELANCER");
+
+            freelancerRepository.save(freelancer);
+            System.out.println("Freelancer saved successfully!");
+        } catch (Exception e) {
+            System.err.println("Error saving Freelancer: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
     // Criar Freelancer
     public Freelancer registerFreelancer(Freelancer freelancer) {
+        freelancer.setRole("FREELANCER"); // Define o papel como Freelancer
         return freelancerRepository.save(freelancer);
     }
 
     // Criar Employer
     public Employer registerEmployer(Employer employer) {
+        // Validações de unicidade
+        if (employerRepository.existsByUsername(employer.getUsername()) ||
+                employerRepository.existsByEmail(employer.getEmail()) ||
+                employerRepository.existsByCpf(employer.getCpf())) {
+            throw new RuntimeException("Duplicate entry for username, email, or CPF");
+        }
+
+        // Define o papel como Employer
+        employer.setRole("EMPLOYER");
         return employerRepository.save(employer);
     }
+
 
     // Obter todos os Freelancers
     public List<Freelancer> getAllFreelancers() {
@@ -60,11 +94,11 @@ public class UserService {
     }
 
     // Atualizar Freelancer
-    public Freelancer updateFreelancer(String cpf, Freelancer updatedFreelancer) {
-        Optional<Freelancer> optionalFreelancer = freelancerRepository.findByCpf(cpf);
+    public Freelancer updateFreelancer(Long id, Freelancer updatedFreelancer) {
+        Optional<Freelancer> optionalFreelancer = freelancerRepository.findById(id);
 
         if (optionalFreelancer.isEmpty()) {
-            throw new RuntimeException("Freelancer not found with CPF: " + cpf);
+            throw new RuntimeException("Freelancer not found with ID: " + id);
         }
 
         Freelancer freelancer = optionalFreelancer.get();
@@ -77,11 +111,11 @@ public class UserService {
     }
 
     // Atualizar Employer
-    public Employer updateEmployer(String cpf, Employer updatedEmployer) {
-        Optional<Employer> optionalEmployer = employerRepository.findByCpf(cpf);
+    public Employer updateEmployer(Long id, Employer updatedEmployer) {
+        Optional<Employer> optionalEmployer = employerRepository.findById(id);
 
         if (optionalEmployer.isEmpty()) {
-            throw new RuntimeException("Employer not found with CPF: " + cpf);
+            throw new RuntimeException("Employer not found with ID: " + id);
         }
 
         Employer employer = optionalEmployer.get();
@@ -94,22 +128,22 @@ public class UserService {
     }
 
     // Deletar Freelancer
-    public void deleteFreelancer(String cpf) {
-        Optional<Freelancer> optionalFreelancer = freelancerRepository.findByCpf(cpf);
+    public void deleteFreelancer(Long id) {
+        Optional<Freelancer> optionalFreelancer = freelancerRepository.findById(id);
 
         if (optionalFreelancer.isEmpty()) {
-            throw new RuntimeException("Freelancer not found with CPF: " + cpf);
+            throw new RuntimeException("Freelancer not found with ID: " + id);
         }
 
         freelancerRepository.delete(optionalFreelancer.get());
     }
 
     // Deletar Employer
-    public void deleteEmployer(String cpf) {
-        Optional<Employer> optionalEmployer = employerRepository.findByCpf(cpf);
+    public void deleteEmployer(Long id) {
+        Optional<Employer> optionalEmployer = employerRepository.findById(id);
 
         if (optionalEmployer.isEmpty()) {
-            throw new RuntimeException("Employer not found with CPF: " + cpf);
+            throw new RuntimeException("Employer not found with ID: " + id);
         }
 
         employerRepository.delete(optionalEmployer.get());
