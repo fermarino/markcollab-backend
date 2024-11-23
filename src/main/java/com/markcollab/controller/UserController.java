@@ -18,16 +18,68 @@ public class UserController {
 
     // Criar Freelancer
     @PostMapping("/freelancers")
-    public ResponseEntity<Freelancer> registerFreelancer(@RequestBody Freelancer freelancer) {
-        Freelancer savedFreelancer = userService.registerFreelancer(freelancer);
-        return ResponseEntity.ok(savedFreelancer);
+    public ResponseEntity<?> registerFreelancer(@RequestBody Freelancer freelancer) {
+        try {
+            Freelancer savedFreelancer = userService.registerFreelancer(freelancer);
+            return ResponseEntity.ok(savedFreelancer);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // Criar Employer
     @PostMapping("/employers")
-    public ResponseEntity<Employer> registerEmployer(@RequestBody Employer employer) {
-        Employer savedEmployer = userService.registerEmployer(employer);
-        return ResponseEntity.ok(savedEmployer);
+    public ResponseEntity<?> registerEmployer(@RequestBody Employer employer) {
+        try {
+            Employer savedEmployer = userService.registerEmployer(employer);
+            return ResponseEntity.ok(savedEmployer);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Atualizar Freelancer
+    @PutMapping("/freelancers/{cpf}")
+    public ResponseEntity<?> updateFreelancer(@PathVariable String cpf, @RequestBody Freelancer freelancer) {
+        try {
+            Freelancer updatedFreelancer = userService.updateFreelancer(cpf, freelancer);
+            return ResponseEntity.ok(updatedFreelancer);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Atualizar Employer
+    @PutMapping("/employers/{cpf}")
+    public ResponseEntity<?> updateEmployer(@PathVariable String cpf, @RequestBody Employer employer) {
+        try {
+            Employer updatedEmployer = userService.updateEmployer(cpf, employer);
+            return ResponseEntity.ok(updatedEmployer);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Deletar Freelancer
+    @DeleteMapping("/freelancers/{cpf}")
+    public ResponseEntity<?> deleteFreelancer(@PathVariable String cpf) {
+        try {
+            userService.deleteFreelancer(cpf);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Deletar Employer
+    @DeleteMapping("/employers/{cpf}")
+    public ResponseEntity<?> deleteEmployer(@PathVariable String cpf) {
+        try {
+            userService.deleteEmployer(cpf);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     // Obter todos os Freelancers
@@ -40,29 +92,5 @@ public class UserController {
     @GetMapping("/employers")
     public ResponseEntity<List<Employer>> getAllEmployers() {
         return ResponseEntity.ok(userService.getAllEmployers());
-    }
-
-    // Buscar Freelancers por Nome
-    @GetMapping("/freelancers/name/{name}")
-    public ResponseEntity<List<Freelancer>> findFreelancersByName(@PathVariable String name) {
-        return ResponseEntity.ok(userService.findFreelancersByName(name));
-    }
-
-    // Buscar Freelancers por Username
-    @GetMapping("/freelancers/username/{username}")
-    public ResponseEntity<List<Freelancer>> findFreelancersByUsername(@PathVariable String username) {
-        return ResponseEntity.ok(userService.findFreelancersByUsername(username));
-    }
-
-    // Buscar Employers por Nome
-    @GetMapping("/employers/name/{name}")
-    public ResponseEntity<List<Employer>> findEmployersByName(@PathVariable String name) {
-        return ResponseEntity.ok(userService.findEmployersByName(name));
-    }
-
-    // Buscar Employers por Username
-    @GetMapping("/employers/username/{username}")
-    public ResponseEntity<List<Employer>> findEmployersByUsername(@PathVariable String username) {
-        return ResponseEntity.ok(userService.findEmployersByUsername(username));
     }
 }

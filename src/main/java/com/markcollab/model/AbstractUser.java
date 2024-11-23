@@ -3,13 +3,13 @@ package com.markcollab.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
-@MappedSuperclass
 @Data
+@MappedSuperclass
 public abstract class AbstractUser {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(nullable = false, unique = true)
+    private String cpf; // CPF fornecido manualmente
 
     @Column(nullable = false)
     private String name;
@@ -20,9 +20,9 @@ public abstract class AbstractUser {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false, unique = true)
-    private String cpf;
+    @Column(nullable = false)
+    private String password;
 
     @Column(nullable = false)
-    private String role; // "FREELANCER" ou "EMPLOYER"
+    private String role;
 }

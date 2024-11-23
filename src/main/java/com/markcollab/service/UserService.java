@@ -1,15 +1,15 @@
 package com.markcollab.service;
 
+import com.markcollab.model.AbstractUser;
 import com.markcollab.model.Employer;
 import com.markcollab.model.Freelancer;
 import com.markcollab.repository.EmployerRepository;
 import com.markcollab.repository.FreelancerRepository;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserService {
@@ -20,48 +20,37 @@ public class UserService {
     @Autowired
     private EmployerRepository employerRepository;
 
-
-    // Método de teste para salvar manualmente um Freelancer
-    @PostConstruct
-    public void testSaveFreelancer() {
-        try {
-            Freelancer freelancer = new Freelancer();
-            freelancer.setName("Jane Doe");
-            freelancer.setUsername("jane_doe");
-            freelancer.setEmail("jane.doe@example.com");
-            freelancer.setCpf("98765432100");
-            freelancer.setPortfolioLink("http://portfolio.example.com");
-            freelancer.setRole("FREELANCER");
-
-            freelancerRepository.save(freelancer);
-            System.out.println("Freelancer saved successfully!");
-        } catch (Exception e) {
-            System.err.println("Error saving Freelancer: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
+    @Autowired
+    private BCryptPasswordEncoder passwordEncoder;
 
     // Criar Freelancer
     public Freelancer registerFreelancer(Freelancer freelancer) {
-        freelancer.setRole("FREELANCER"); // Define o papel como Freelancer
+        validateUser(freelancer.getCpf(), freelancer.getEmail(), freelancer.getUsername());
+        freelancer.setRole("FREELANCER");
+        freelancer.setPassword(passwordEncoder.encode(freelancer.getPassword()));
         return freelancerRepository.save(freelancer);
     }
 
     // Criar Employer
     public Employer registerEmployer(Employer employer) {
-        // Validações de unicidade
-        if (employerRepository.existsByUsername(employer.getUsername()) ||
-                employerRepository.existsByEmail(employer.getEmail()) ||
-                employerRepository.existsByCpf(employer.getCpf())) {
-            throw new RuntimeException("Duplicate entry for username, email, or CPF");
-        }
-
-        // Define o papel como Employer
+        validateUser(employer.getCpf(), employer.getEmail(), employer.getUsername());
         employer.setRole("EMPLOYER");
+        employer.setPassword(passwordEncoder.encode(employer.getPassword()));
         return employerRepository.save(employer);
     }
 
+    // Validações de duplicidade
+    private void validateUser(String cpf, String email, String username) {
+        if (freelancerRepository.existsByUsername(username) || employerRepository.existsByUsername(username)) {
+            throw new RuntimeException("Username is already in use.");
+        }
+        if (freelancerRepository.existsByEmail(email) || employerRepository.existsByEmail(email)) {
+            throw new RuntimeException("Email is already in use.");
+        }
+        if (freelancerRepository.existsById(cpf) || employerRepository.existsById(cpf)) {
+            throw new RuntimeException("CPF is already in use.");
+        }
+    }
 
     // Obter todos os Freelancers
     public List<Freelancer> getAllFreelancers() {
@@ -73,35 +62,13 @@ public class UserService {
         return employerRepository.findAll();
     }
 
-    // Buscar Freelancers por Nome
-    public List<Freelancer> findFreelancersByName(String name) {
-        return freelancerRepository.findByNameContainingIgnoreCase(name);
-    }
-
-    // Buscar Freelancers por Username
-    public List<Freelancer> findFreelancersByUsername(String username) {
-        return freelancerRepository.findByUsernameContainingIgnoreCase(username);
-    }
-
-    // Buscar Employers por Nome
-    public List<Employer> findEmployersByName(String name) {
-        return employerRepository.findByNameContainingIgnoreCase(name);
-    }
-
-    // Buscar Employers por Username
-    public List<Employer> findEmployersByUsername(String username) {
-        return employerRepository.findByUsernameContainingIgnoreCase(username);
-    }
-
     // Atualizar Freelancer
-    public Freelancer updateFreelancer(Long id, Freelancer updatedFreelancer) {
-        Optional<Freelancer> optionalFreelancer = freelancerRepository.findById(id);
+    public Freelancer updateFreelancer(String cpf, Freelancer updatedFreelancer) {
+        Freelancer freelancer = freelancerRepository.findById(cpf)
+                .orElseThrow(() -> new RuntimeException("Freelancer not found with CPF: " + cpf));
 
-        if (optionalFreelancer.isEmpty()) {
-            throw new RuntimeException("Freelancer not found with ID: " + id);
-        }
+        validateUpdatedUser(cpf, updatedFreelancer.getEmail(), updatedFreelancer.getUsername());
 
-        Freelancer freelancer = optionalFreelancer.get();
         freelancer.setName(updatedFreelancer.getName());
         freelancer.setUsername(updatedFreelancer.getUsername());
         freelancer.setEmail(updatedFreelancer.getEmail());
@@ -111,14 +78,12 @@ public class UserService {
     }
 
     // Atualizar Employer
-    public Employer updateEmployer(Long id, Employer updatedEmployer) {
-        Optional<Employer> optionalEmployer = employerRepository.findById(id);
+    public Employer updateEmployer(String cpf, Employer updatedEmployer) {
+        Employer employer = employerRepository.findById(cpf)
+                .orElseThrow(() -> new RuntimeException("Employer not found with CPF: " + cpf));
 
-        if (optionalEmployer.isEmpty()) {
-            throw new RuntimeException("Employer not found with ID: " + id);
-        }
+        validateUpdatedUser(cpf, updatedEmployer.getEmail(), updatedEmployer.getUsername());
 
-        Employer employer = optionalEmployer.get();
         employer.setName(updatedEmployer.getName());
         employer.setUsername(updatedEmployer.getUsername());
         employer.setEmail(updatedEmployer.getEmail());
@@ -127,25 +92,48 @@ public class UserService {
         return employerRepository.save(employer);
     }
 
-    // Deletar Freelancer
-    public void deleteFreelancer(Long id) {
-        Optional<Freelancer> optionalFreelancer = freelancerRepository.findById(id);
-
-        if (optionalFreelancer.isEmpty()) {
-            throw new RuntimeException("Freelancer not found with ID: " + id);
+    // Validações para atualização
+    private void validateUpdatedUser(String cpf, String email, String username) {
+        if ((freelancerRepository.existsByUsername(username) || employerRepository.existsByUsername(username)) &&
+                !freelancerRepository.existsById(cpf) && !employerRepository.existsById(cpf)) {
+            throw new RuntimeException("Username is already in use.");
         }
+        if ((freelancerRepository.existsByEmail(email) || employerRepository.existsByEmail(email)) &&
+                !freelancerRepository.existsById(cpf) && !employerRepository.existsById(cpf)) {
+            throw new RuntimeException("Email is already in use.");
+        }
+    }
 
-        freelancerRepository.delete(optionalFreelancer.get());
+    // Deletar Freelancer
+    public void deleteFreelancer(String cpf) {
+        Freelancer freelancer = freelancerRepository.findById(cpf)
+                .orElseThrow(() -> new RuntimeException("Freelancer not found with CPF: " + cpf));
+        freelancerRepository.delete(freelancer);
     }
 
     // Deletar Employer
-    public void deleteEmployer(Long id) {
-        Optional<Employer> optionalEmployer = employerRepository.findById(id);
+    public void deleteEmployer(String cpf) {
+        Employer employer = employerRepository.findById(cpf)
+                .orElseThrow(() -> new RuntimeException("Employer not found with CPF: " + cpf));
+        employerRepository.delete(employer);
+    }
 
-        if (optionalEmployer.isEmpty()) {
-            throw new RuntimeException("Employer not found with ID: " + id);
+    // Buscar Freelancer por Username
+    public Freelancer findFreelancerByUsername(String username) {
+        return freelancerRepository.findByUsernameContainingIgnoreCase(username).stream().findFirst().orElse(null);
+    }
+
+    // Buscar Employer por Username
+    public Employer findEmployerByUsername(String username) {
+        return employerRepository.findByUsernameContainingIgnoreCase(username).stream().findFirst().orElse(null);
+    }
+
+    // Buscar qualquer usuário por Username
+    public AbstractUser findUserByUsername(String username) {
+        Freelancer freelancer = freelancerRepository.findByUsernameContainingIgnoreCase(username).stream().findFirst().orElse(null);
+        if (freelancer != null) {
+            return freelancer;
         }
-
-        employerRepository.delete(optionalEmployer.get());
+        return employerRepository.findByUsernameContainingIgnoreCase(username).stream().findFirst().orElse(null);
     }
 }
