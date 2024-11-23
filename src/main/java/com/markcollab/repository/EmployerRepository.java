@@ -5,11 +5,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface EmployerRepository extends JpaRepository<Employer, Long> {
+public interface EmployerRepository extends JpaRepository<Employer, String> { // CPF é a chave primária
     List<Employer> findByNameContainingIgnoreCase(String name);
     List<Employer> findByUsernameContainingIgnoreCase(String username);
 
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
-    boolean existsByCpf(String cpf);
 }
