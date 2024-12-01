@@ -1,0 +1,38 @@
+version: "3.8"
+services:
+  # Banco de Dados PostgreSQL
+  db:
+    image: postgres:13
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}  # Variável de ambiente
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # Variável de ambiente
+      POSTGRES_DB: ${POSTGRES_DB}  # Variável de ambiente
+    ports:
+      - "5432:5432"  # Porta exposta do banco
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Persistência dos dados
+
+  # Aplicação Spring Boot
+  app:
+    build: .
+    container_name: spring-boot-app
+    ports:
+      - "8080:8080"  # Porta da aplicação Spring Boot
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}  # Variável de ambiente
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}  # Variável de ambiente
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}  # Variável de ambiente
+    networks:
+      - app-network
+
+# Volume para persistência de dados do banco de dados
+volumes:
+  postgres_data:
+
+# Rede interna para comunicação entre os containers
+networks:
+  app-network:
+    driver: bridge

@@ -1,0 +1,31 @@
+# Diretórios do Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+.env
+
+# Arquivos de configuração do IntelliJ IDEA
+.idea/
+*.iml
+
+# Arquivos de configuração do Eclipse
+.classpath
+.project
+.settings/
+
+# Arquivos do NetBeans
+nbproject/
+
+# Dependências baixadas pelo Maven (ou Gradle, se estiver usando)
+*.log
+*.class
+
+# Arquivos de logs
+*.log
+
+# Arquivos de sistema (arquivos do Mac, Windows, etc.)
+.DS_Store
+Thumbs.db
+
+# Arquivos de configuração do sistema operacional (Linux, Windows, etc.)
+*.swp
+*.swo
