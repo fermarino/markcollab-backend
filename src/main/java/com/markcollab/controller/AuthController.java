@@ -1,8 +1,8 @@
 package com.markcollab.controller;
 
 import com.markcollab.model.AbstractUser;
+import com.markcollab.service.AuthService;
 import com.markcollab.service.JwtService;
-import com.markcollab.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -15,7 +15,7 @@ import java.util.Map;
 public class AuthController {
 
     @Autowired
-    private UserService userService;
+    private AuthService authService;
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
@@ -29,7 +29,7 @@ public class AuthController {
         String password = body.get("password");
 
         // Verifica se o usuário existe
-        AbstractUser user = userService.findUserByUsername(username);
+        AbstractUser user = authService.findUserByUsername(username);
         if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
             return ResponseEntity.badRequest().body(Map.of("error", "Invalid username or password"));
         }

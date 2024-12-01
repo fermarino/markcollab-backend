@@ -20,12 +20,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable() // Desabilita CSRF para simplificação (não recomendado em produção)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/users/**").permitAll() // Rotas públicas
+                        .requestMatchers("/api/auth/**", "/api/users/**", "/api/freelancers", "/api/employers").permitAll() // Permite acesso público
                         .requestMatchers("/api/projects/**").permitAll() // Permitir acesso público ao endpoint de projetos
                         .anyRequest().authenticated() // Demais rotas exigem autenticação
                 );
         return http.build();
-
     }
 
     @Bean
