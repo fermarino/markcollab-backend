@@ -1,5 +1,6 @@
 package com.markcollab.controller;
 
+import com.markcollab.dto.ProjectDTO;
 import com.markcollab.model.*;
 import com.markcollab.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +17,22 @@ public class ProjectController {
     private ProjectService projectService;
 
     @PostMapping("/{employerCpf}")
-    public ResponseEntity<Project> createProject(@RequestBody Project project, @PathVariable String employerCpf) {
+    public ResponseEntity<ProjectDTO> createProject(@RequestBody Project project, @PathVariable String employerCpf) {
         return ResponseEntity.ok(projectService.createProject(project, employerCpf));
+    }
+
+    @PutMapping("/{projectId}/status/{employerCpf}")
+    public ResponseEntity<Project> updateProjectStatus(@PathVariable Long projectId,
+                                                       @PathVariable String employerCpf,
+                                                       @RequestBody String newStatus) {
+        return ResponseEntity.ok(projectService.updateProjectStatus(projectId, newStatus, employerCpf));
+    }
+
+    @PostMapping("/{projectId}/hire/{freelancerCpf}/{employerCpf}")
+    public ResponseEntity<ProjectDTO> hireFreelancer(@PathVariable Long projectId,
+                                                     @PathVariable String freelancerCpf,
+                                                     @PathVariable String employerCpf) {
+        return ResponseEntity.ok(projectService.hireFreelancer(projectId, freelancerCpf, employerCpf));
     }
 
     @PutMapping("/{projectId}/{employerCpf}")
@@ -45,11 +60,5 @@ public class ProjectController {
     @PostMapping("/{projectId}/interest/{freelancerCpf}")
     public ResponseEntity<Interest> addInterest(@PathVariable Long projectId, @PathVariable String freelancerCpf) {
         return ResponseEntity.ok(projectService.addInterest(projectId, freelancerCpf));
-    }
-
-    @PostMapping("/{projectId}/hire/{freelancerCpf}/{employerCpf}")
-    public ResponseEntity<Project> hireFreelancer(@PathVariable Long projectId, @PathVariable String freelancerCpf,
-                                                  @PathVariable String employerCpf) {
-        return ResponseEntity.ok(projectService.hireFreelancer(projectId, freelancerCpf, employerCpf));
     }
 }

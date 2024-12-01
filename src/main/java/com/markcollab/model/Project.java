@@ -27,7 +27,10 @@ public class Project {
     private Double projectPrice;
 
     @Column(nullable = false)
-    private boolean open = true;
+    private boolean open = true; // Indica se o projeto está aberto para interesse
+
+    @Column(nullable = false)
+    private String status = "Aberto"; // Status do projeto: Aberto, Em andamento, Concluído
 
     @ManyToOne
     @JoinColumn(name = "employer_cpf", nullable = false)
@@ -36,7 +39,11 @@ public class Project {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
     private List<Interest> interestedFreelancers;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "hired_freelancer_cpf")
     private Freelancer hiredFreelancer;
+
+
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
+    private List<Feedback> feedbacks;
 }
