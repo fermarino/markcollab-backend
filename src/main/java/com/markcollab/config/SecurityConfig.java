@@ -19,8 +19,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf().disable()
+                .cors().and() // Ativa CORS
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/users/**", "/api/freelancers", "/api/employers").permitAll()
+                        .requestMatchers("/api/auth/", "/api/users/", "/api/freelancers", "/api/employers").permitAll()
                         .requestMatchers("/api/projects/**").permitAll()
                         .anyRequest().authenticated()
                 );
