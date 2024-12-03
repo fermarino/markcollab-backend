@@ -11,10 +11,10 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret}")
+    @Value("${jwt.secret:default_secret}") // Adiciona um valor padrão para evitar falhas
     private String secret;
 
-    private static final long EXPIRATION_TIME = 86400000;
+    private static final long EXPIRATION_TIME = 86400000; // 24 horas
 
     public String generateToken(AbstractUser user) {
         return Jwts.builder()
