@@ -4,7 +4,7 @@ import com.markcollab.dto.EmployerDTO;
 import com.markcollab.model.Employer;
 import com.markcollab.repository.EmployerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,14 +15,10 @@ public class EmployerService {
     @Autowired
     private EmployerRepository employerRepository;
 
-
     @Autowired
-    AuthService authService;
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
 
     public EmployerDTO registerEmployer(Employer employer) {
-        validatePassword(employer.getPassword());
         validateEmployer(employer);
         employer.setRole("EMPLOYER");
         employer.setPassword(passwordEncoder.encode(employer.getPassword()));

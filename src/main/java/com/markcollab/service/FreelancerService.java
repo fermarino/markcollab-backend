@@ -4,7 +4,7 @@ import com.markcollab.dto.FreelancerDTO;
 import com.markcollab.model.Freelancer;
 import com.markcollab.repository.FreelancerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,7 +16,7 @@ public class FreelancerService {
     private FreelancerRepository freelancerRepository;
 
     @Autowired
-    private BCryptPasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
 
     public FreelancerDTO registerFreelancer(Freelancer freelancer) {
         validateFreelancer(freelancer);
