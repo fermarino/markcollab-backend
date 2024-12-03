@@ -15,10 +15,14 @@ public class EmployerService {
     @Autowired
     private EmployerRepository employerRepository;
 
+
+    @Autowired
+    AuthService authService;
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
     public EmployerDTO registerEmployer(Employer employer) {
+        validatePassword(employer.getPassword());
         validateEmployer(employer);
         employer.setRole("EMPLOYER");
         employer.setPassword(passwordEncoder.encode(employer.getPassword()));
