@@ -3,11 +3,13 @@ package com.markcollab.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+
 import java.util.List;
 
 @Entity
 @Table(name = "projects")
 @Data
+
 public class Project {
 
     @Id
@@ -47,3 +49,4 @@ public class Project {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
     private List<Feedback> feedbacks;
 }
+

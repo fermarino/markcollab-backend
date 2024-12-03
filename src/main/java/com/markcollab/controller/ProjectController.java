@@ -1,7 +1,8 @@
 package com.markcollab.controller;
 
 import com.markcollab.dto.ProjectDTO;
-import com.markcollab.model.*;
+import com.markcollab.model.Interest;
+import com.markcollab.model.Project;
 import com.markcollab.service.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +17,16 @@ public class ProjectController {
 
     @Autowired
     private ProjectService projectService;
+    // Construtor com o parâmetro ProjectService
+    @Autowired
+    public ProjectController(ProjectService projectService) {
+        this.projectService = projectService;
+    }
 
     @PostMapping("/{employerCpf}")
     public ResponseEntity<ProjectDTO> createProject(@RequestBody Project project, @PathVariable String employerCpf) {
-        return ResponseEntity.ok(projectService.createProject(project, employerCpf));
+        ProjectDTO createdProject = projectService.createProject(project, employerCpf);
+        return ResponseEntity.ok(createdProject);
     }
 
     @PutMapping("/{projectId}/status/{employerCpf}")
@@ -55,7 +62,7 @@ public class ProjectController {
 
     @GetMapping("/open")
     public ResponseEntity<List<Project>> getOpenProjects() {
-        return ResponseEntity.ok(projectService.getOpenProjects());
+        return ResponseEntity.ok(projectService.findAll());
     }
 
     @PostMapping("/{projectId}/interest/{freelancerCpf}")

@@ -3,8 +3,14 @@ package com.markcollab.service;
 import com.markcollab.dto.EmployerDTO;
 import com.markcollab.dto.FreelancerDTO;
 import com.markcollab.dto.ProjectDTO;
-import com.markcollab.model.*;
-import com.markcollab.repository.*;
+import com.markcollab.model.Employer;
+import com.markcollab.model.Freelancer;
+import com.markcollab.model.Interest;
+import com.markcollab.model.Project;
+import com.markcollab.repository.EmployerRepository;
+import com.markcollab.repository.FreelancerRepository;
+import com.markcollab.repository.InterestRepository;
+import com.markcollab.repository.ProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,9 +18,16 @@ import java.util.List;
 
 @Service
 public class ProjectService {
+    private final ProjectRepository projectRepository;
 
     @Autowired
-    private ProjectRepository projectRepository;
+    public ProjectService(ProjectRepository projectRepository) {
+        this.projectRepository = projectRepository;
+    }
+
+    public List<Project> findAll() {
+        return projectRepository.findAll();
+    }
 
     @Autowired
     private InterestRepository interestRepository;
@@ -59,16 +72,18 @@ public class ProjectService {
         }
 
         // Mapear Project para ProjectDTO
-        ProjectDTO projectDTO = new ProjectDTO();
-        projectDTO.setProjectId(project.getProjectId());
-        projectDTO.setProjectTitle(project.getProjectTitle());
-        projectDTO.setProjectDescription(project.getProjectDescription());
-        projectDTO.setProjectSpecifications(project.getProjectSpecifications());
-        projectDTO.setProjectPrice(project.getProjectPrice());
-        projectDTO.setOpen(project.isOpen());
-        projectDTO.setStatus(project.getStatus());
-        projectDTO.setProjectEmployer(employerDTO);
-        projectDTO.setHiredFreelancer(freelancerDTO);
+        ProjectDTO projectDTO = ProjectDTO.builder()
+                .projectId(project.getProjectId())
+                .projectTitle(project.getProjectTitle())
+                .projectDescription(project.getProjectDescription())
+                .projectSpecifications(project.getProjectSpecifications())
+                .projectPrice(project.getProjectPrice())
+                .open(project.isOpen())
+                .status(project.getStatus())
+                .projectEmployer(employerDTO)
+                .hiredFreelancer(freelancerDTO)
+                .build();
+
 
         return projectDTO;
     }
@@ -192,5 +207,7 @@ public class ProjectService {
         interest.setStatus("Aguardando resposta");
 
         return interestRepository.save(interest);
+
+
     }
 }
