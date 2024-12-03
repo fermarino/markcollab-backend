@@ -20,6 +20,7 @@ public class EmployerService {
 
     public EmployerDTO registerEmployer(Employer employer) {
         validateEmployer(employer);
+        validatePassword(employer.getPassword()); // Validação de senha adicionada
         employer.setRole("EMPLOYER");
         employer.setPassword(passwordEncoder.encode(employer.getPassword()));
         Employer savedEmployer = employerRepository.save(employer);
@@ -61,6 +62,18 @@ public class EmployerService {
         }
         if (employerRepository.existsById(employer.getCpf())) {
             throw new RuntimeException("CPF already in use");
+        }
+    }
+
+    private void validatePassword(String password) {
+        if (password.length() < 8) {
+            throw new RuntimeException("Password must be at least 8 characters long");
+        }
+        if (!password.matches(".*[A-Z].*")) {
+            throw new RuntimeException("Password must contain at least one uppercase letter");
+        }
+        if (!password.matches(".*\\d.*")) {
+            throw new RuntimeException("Password must contain at least one number");
         }
     }
 }

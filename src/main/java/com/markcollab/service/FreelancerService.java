@@ -20,6 +20,7 @@ public class FreelancerService {
 
     public FreelancerDTO registerFreelancer(Freelancer freelancer) {
         validateFreelancer(freelancer);
+        validatePassword(freelancer.getPassword()); // Validação de senha adicionada
         freelancer.setRole("FREELANCER");
         freelancer.setPassword(passwordEncoder.encode(freelancer.getPassword()));
         Freelancer savedFreelancer = freelancerRepository.save(freelancer);
@@ -61,6 +62,18 @@ public class FreelancerService {
         }
         if (freelancerRepository.existsById(freelancer.getCpf())) {
             throw new RuntimeException("CPF already in use");
+        }
+    }
+
+    private void validatePassword(String password) {
+        if (password.length() < 8) {
+            throw new RuntimeException("Password must be at least 8 characters long");
+        }
+        if (!password.matches(".*[A-Z].*")) {
+            throw new RuntimeException("Password must contain at least one uppercase letter");
+        }
+        if (!password.matches(".*\\d.*")) {
+            throw new RuntimeException("Password must contain at least one number");
         }
     }
 }
