@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class EmployerService {
@@ -49,8 +50,18 @@ public class EmployerService {
         employerRepository.delete(employer);
     }
 
-    public List<Employer> getAllEmployers() {
-        return employerRepository.findAll();
+    public List<EmployerDTO> getAllEmployers() {
+        return employerRepository.findAll()
+                .stream()
+                .map(employer -> {
+                    EmployerDTO dto = new EmployerDTO();
+                    dto.setName(employer.getName());
+                    dto.setUsername(employer.getUsername());
+                    dto.setEmail(employer.getEmail());
+                    dto.setCompanyName(employer.getCompanyName());
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
 
     private void validateEmployer(Employer employer) {

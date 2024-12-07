@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class FreelancerService {
@@ -49,10 +50,19 @@ public class FreelancerService {
         freelancerRepository.delete(freelancer);
     }
 
-    public List<Freelancer> getAllFreelancers() {
-        return freelancerRepository.findAll();
+    public List<FreelancerDTO> getAllFreelancers() {
+        return freelancerRepository.findAll()
+                .stream()
+                .map(freelancer -> {
+                    FreelancerDTO dto = new FreelancerDTO();
+                    dto.setName(freelancer.getName());
+                    dto.setUsername(freelancer.getUsername());
+                    dto.setEmail(freelancer.getEmail());
+                    dto.setPortfolioLink(freelancer.getPortfolioLink());
+                    return dto;
+                })
+                .collect(Collectors.toList());
     }
-
     private void validateFreelancer(Freelancer freelancer) {
         if (freelancerRepository.existsByUsername(freelancer.getUsername())) {
             throw new RuntimeException("Username already in use");

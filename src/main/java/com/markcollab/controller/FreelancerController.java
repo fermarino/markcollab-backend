@@ -33,7 +33,7 @@ public class FreelancerController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Freelancer>> getAllFreelancers() {
+    public ResponseEntity<List<FreelancerDTO>> getAllFreelancers() {
         return ResponseEntity.ok(freelancerService.getAllFreelancers());
     }
 }

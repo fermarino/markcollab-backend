@@ -33,7 +33,8 @@ public class EmployerController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Employer>> getAllEmployers() {
+    public ResponseEntity<List<EmployerDTO>> getAllEmployers() {
         return ResponseEntity.ok(employerService.getAllEmployers());
     }
+
 }
