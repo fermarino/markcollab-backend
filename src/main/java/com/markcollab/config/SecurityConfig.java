@@ -25,14 +25,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors().and().csrf().disable()
+                .cors().and().csrf().disable() // Habilita CORS e desabilita CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/employers/**").hasRole("EMPLOYER")
-                        .requestMatchers("/api/freelancers/**").hasRole("FREELANCER")
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll() // Permite qualquer requisição
                 )
-                .sessionManagement(session -> session.disable());
+                .sessionManagement(session -> session.disable()); // Sem sessões
 
         return http.build();
     }
