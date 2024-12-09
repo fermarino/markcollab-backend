@@ -25,27 +25,13 @@ public class AuthService {
     @Autowired
     private JwtService jwtService;
 
-    /**
-     * Método para registrar um empregador (Employer).
-     */
     public void registerEmployer(Map<String, Object> body) {
         String cpf = (String) body.get("cpf");
         String email = (String) body.get("email");
         String username = (String) body.get("username");
 
-        // Valida duplicidade de CPF
-        if (employerRepository.existsById(cpf)) {
-            throw new RuntimeException("CPF já em uso.");
-        }
-
-        // Valida duplicidade de e-mail
-        if (employerRepository.existsByEmail(email)) {
-            throw new RuntimeException("E-mail já está em uso.");
-        }
-
-        // Valida duplicidade de username
-        if (employerRepository.existsByUsername(username)) {
-            throw new RuntimeException("Username já está em uso.");
+        if (employerRepository.existsById(cpf) || employerRepository.existsByEmail(email) || employerRepository.existsByUsername(username)) {
+            throw new RuntimeException("Employer details already in use.");
         }
 
         Employer employer = new Employer();
@@ -60,27 +46,13 @@ public class AuthService {
         employerRepository.save(employer);
     }
 
-    /**
-     * Método para registrar um freelancer.
-     */
     public void registerFreelancer(Map<String, Object> body) {
         String cpf = (String) body.get("cpf");
         String email = (String) body.get("email");
         String username = (String) body.get("username");
 
-        // Valida duplicidade de CPF
-        if (freelancerRepository.existsById(cpf)) {
-            throw new RuntimeException("CPF já em uso.");
-        }
-
-        // Valida duplicidade de e-mail
-        if (freelancerRepository.existsByEmail(email)) {
-            throw new RuntimeException("E-mail já está em uso.");
-        }
-
-        // Valida duplicidade de username
-        if (freelancerRepository.existsByUsername(username)) {
-            throw new RuntimeException("Username já está em uso.");
+        if (freelancerRepository.existsById(cpf) || freelancerRepository.existsByEmail(email) || freelancerRepository.existsByUsername(username)) {
+            throw new RuntimeException("Freelancer details already in use.");
         }
 
         Freelancer freelancer = new Freelancer();
@@ -95,17 +67,12 @@ public class AuthService {
         freelancerRepository.save(freelancer);
     }
 
-    /**
-     * Método para autenticar um usuário baseado no username e senha.
-     */
     public String authenticate(String username, String password) {
-        // Tenta autenticar como Employer
         Employer employer = employerRepository.findByUsername(username).orElse(null);
         if (employer != null && passwordEncoder.matches(password, employer.getPassword())) {
             return jwtService.generateToken(employer);
         }
 
-        // Tenta autenticar como Freelancer
         Freelancer freelancer = freelancerRepository.findByUsername(username).orElse(null);
         if (freelancer != null && passwordEncoder.matches(password, freelancer.getPassword())) {
             return jwtService.generateToken(freelancer);

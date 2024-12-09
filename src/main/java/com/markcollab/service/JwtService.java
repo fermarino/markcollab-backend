@@ -11,7 +11,7 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    @Value("${jwt.secret:default_secret}") // Adiciona um valor padrão para evitar falhas
+    @Value("${jwt.secret:default_secret}")
     private String secret;
 
     private static final long EXPIRATION_TIME = 86400000; // 24 horas

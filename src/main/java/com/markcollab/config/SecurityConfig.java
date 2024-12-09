@@ -25,11 +25,12 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors().and().csrf().disable() // Habilita CORS e desabilita CSRF
+                .cors().and().csrf().disable() // Permite CORS e desativa CSRF
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll() // Permite qualquer requisição
+                        .antMatchers("/api/auth/**").permitAll() // Permite acesso sem autenticação às rotas de login/registro
+                        .anyRequest().authenticated() // Exige autenticação para demais rotas
                 )
-                .sessionManagement(session -> session.disable()); // Sem sessões
+                .sessionManagement(session -> session.stateless()); // Desabilita sessões
 
         return http.build();
     }
