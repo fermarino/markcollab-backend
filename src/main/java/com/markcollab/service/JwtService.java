@@ -1,6 +1,6 @@
 package com.markcollab.service;
 
-import com.markcollab.model.AbstractUser;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,32 +16,28 @@ public class JwtService {
 
     private static final long EXPIRATION_TIME = 86400000; // 24 horas
 
-    public String generateToken(AbstractUser user) {
+    public String generateToken(String username, String role) {
         return Jwts.builder()
-                .setSubject(user.getUsername())
-                .claim("role", user.getRole()) // Inclui o tipo de usuário no token
+                .setSubject(username)
+                .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(SignatureAlgorithm.HS256, secret.getBytes())
                 .compact();
     }
 
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parser()
-                    .setSigningKey(secret.getBytes())
-                    .parseClaimsJws(token);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+    public String extractUsername(String token) {
+        return getClaims(token).getSubject();
     }
 
     public String extractRole(String token) {
+        return getClaims(token).get("role", String.class);
+    }
+
+    private Claims getClaims(String token) {
         return Jwts.parser()
                 .setSigningKey(secret.getBytes())
                 .parseClaimsJws(token)
-                .getBody()
-                .get("role", String.class);
+                .getBody();
     }
 }
