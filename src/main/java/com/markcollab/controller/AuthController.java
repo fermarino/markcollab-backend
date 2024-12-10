@@ -27,12 +27,12 @@ public class AuthController {
             String role = (String) body.get("role");
             if ("EMPLOYER".equalsIgnoreCase(role)) {
                 authService.registerEmployer(body);
-                return ResponseEntity.ok("Empregador registrado com sucesso!");
+                return ResponseEntity.ok("Employer registered successfully!");
             } else if ("FREELANCER".equalsIgnoreCase(role)) {
                 authService.registerFreelancer(body);
-                return ResponseEntity.ok("Freelancer registrado com sucesso!");
+                return ResponseEntity.ok("Freelancer registered successfully!");
             } else {
-                return ResponseEntity.badRequest().body("Role inválido.");
+                return ResponseEntity.badRequest().body("Invalid role.");
             }
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -42,6 +42,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> body) {
         String token = authService.authenticate(body.get("username"), body.get("password"));
-        return ResponseEntity.ok(Map.of("token", token));
+        String role = jwtService.extractRole(token);
+        return ResponseEntity.ok(Map.of("token", token, "role", role));
     }
 }

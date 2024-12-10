@@ -19,7 +19,7 @@ public class JwtService {
     public String generateToken(AbstractUser user) {
         return Jwts.builder()
                 .setSubject(user.getUsername())
-                .claim("role", user.getRole())
+                .claim("role", user.getRole()) // Inclui o tipo de usuário no token
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(SignatureAlgorithm.HS256, secret.getBytes())
@@ -35,5 +35,13 @@ public class JwtService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public String extractRole(String token) {
+        return Jwts.parser()
+                .setSigningKey(secret.getBytes())
+                .parseClaimsJws(token)
+                .getBody()
+                .get("role", String.class);
     }
 }
