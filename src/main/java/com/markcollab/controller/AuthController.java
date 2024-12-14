@@ -39,10 +39,16 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> body) {
-        String token = authService.authenticate(body.get("username"), body.get("password"));
-        String role = jwtService.extractRole(token);
-        return ResponseEntity.ok(Map.of("token", token, "role", role));
-    }
+@PostMapping("/login")
+public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> body) {
+    String username = body.get("username");
+    String password = body.get("password");
+
+    String token = authService.authenticate(username, password);
+    String role = jwtService.extractRole(token);
+    String cpf = authService.getCpf(username); // Obtém o CPF
+
+    return ResponseEntity.ok(Map.of("token", token, "role", role, "cpf", cpf));
+}
+
 }
