@@ -67,6 +67,21 @@ public class AuthService {
         freelancerRepository.save(freelancer);
     }
 
+    public String getCpf(String username) {
+    Employer employer = employerRepository.findByUsername(username).orElse(null);
+    if (employer != null) {
+        return employer.getCpf();
+    }
+
+    Freelancer freelancer = freelancerRepository.findByUsername(username).orElse(null);
+    if (freelancer != null) {
+        return freelancer.getCpf();
+    }
+
+    throw new RuntimeException("User not found.");
+}
+
+
     public String authenticate(String username, String password) {
         Employer employer = employerRepository.findByUsername(username).orElse(null);
         if (employer != null && passwordEncoder.matches(password, employer.getPassword())) {
