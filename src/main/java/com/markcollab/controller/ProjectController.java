@@ -17,7 +17,7 @@ public class ProjectController {
 
     @Autowired
     private ProjectService projectService;
-    // Construtor com o parâmetro ProjectService
+
     @Autowired
     public ProjectController(ProjectService projectService) {
         this.projectService = projectService;
@@ -68,5 +68,12 @@ public class ProjectController {
     @PostMapping("/{projectId}/interest/{freelancerCpf}")
     public ResponseEntity<Interest> addInterest(@PathVariable Long projectId, @PathVariable String freelancerCpf) {
         return ResponseEntity.ok(projectService.addInterest(projectId, freelancerCpf));
+    }
+
+    // ✅ Novo endpoint para gerar descrição com IA para projeto
+    @PostMapping("/{projectId}/generate-description")
+    public ResponseEntity<ProjectDTO> generateProjectDescription(@PathVariable Long projectId) {
+        ProjectDTO updatedProject = projectService.generateProjectDescription(projectId);
+        return ResponseEntity.ok(updatedProject);
     }
 }

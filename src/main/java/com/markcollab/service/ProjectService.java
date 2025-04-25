@@ -3,6 +3,8 @@ package com.markcollab.service;
 import com.markcollab.dto.EmployerDTO;
 import com.markcollab.dto.FreelancerDTO;
 import com.markcollab.dto.ProjectDTO;
+import com.markcollab.dto.ProjectIARequestDTO;
+import com.markcollab.dto.ProjectIAResponseDTO;
 import com.markcollab.model.Employer;
 import com.markcollab.model.Freelancer;
 import com.markcollab.model.Interest;
@@ -21,15 +23,6 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
 
     @Autowired
-    public ProjectService(ProjectRepository projectRepository) {
-        this.projectRepository = projectRepository;
-    }
-
-    public List<Project> findAll() {
-        return projectRepository.findAll();
-    }
-
-    @Autowired
     private InterestRepository interestRepository;
 
     @Autowired
@@ -37,6 +30,18 @@ public class ProjectService {
 
     @Autowired
     private EmployerRepository employerRepository;
+
+    @Autowired
+    private IAService iaService;  // ✅ Injetando IAService aqui
+
+    @Autowired
+    public ProjectService(ProjectRepository projectRepository) {
+        this.projectRepository = projectRepository;
+    }
+
+    public List<Project> findAll() {
+        return projectRepository.findAll();
+    }
 
     // Criar projeto
     public ProjectDTO createProject(Project project, String employerCpf) {
@@ -52,7 +57,6 @@ public class ProjectService {
 
     // Mapear projeto para DTO
     private ProjectDTO mapToDTO(Project project) {
-        // Mapear Employer para EmployerDTO
         Employer employer = project.getProjectEmployer();
         EmployerDTO employerDTO = new EmployerDTO();
         employerDTO.setName(employer.getName());
@@ -60,7 +64,6 @@ public class ProjectService {
         employerDTO.setEmail(employer.getEmail());
         employerDTO.setCompanyName(employer.getCompanyName());
 
-        // Mapear Freelancer para FreelancerDTO
         FreelancerDTO freelancerDTO = null;
         if (project.getHiredFreelancer() != null) {
             Freelancer freelancer = project.getHiredFreelancer();
@@ -71,8 +74,7 @@ public class ProjectService {
             freelancerDTO.setPortfolioLink(freelancer.getPortfolioLink());
         }
 
-        // Mapear Project para ProjectDTO
-        ProjectDTO projectDTO = ProjectDTO.builder()
+        return ProjectDTO.builder()
                 .projectId(project.getProjectId())
                 .projectTitle(project.getProjectTitle())
                 .projectDescription(project.getProjectDescription())
@@ -83,36 +85,46 @@ public class ProjectService {
                 .projectEmployer(employerDTO)
                 .hiredFreelancer(freelancerDTO)
                 .build();
-
-
-        return projectDTO;
     }
 
-    public ProjectDTO hireFreelancer(Long projectId, String freelancerCpf, String employerCpf) {
-        // Buscar o projeto
+    // ✅ Novo método: gerar descrição com IA
+    public ProjectDTO generateProjectDescription(Long projectId) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
 
-        // Verificar se o contratante é o dono do projeto
+        ProjectIARequestDTO iaRequest = ProjectIARequestDTO.builder()
+                .projectTitle(project.getProjectTitle())
+                .projectSpecifications(project.getProjectSpecifications())
+                .projectDeadline("15 dias")
+                .build();
+
+        ProjectIAResponseDTO iaResponse = iaService.gerarDescricao(iaRequest);
+
+        project.setProjectDescription(iaResponse.getDescricao());
+
+        Project savedProject = projectRepository.save(project);
+        return mapToDTO(savedProject);
+    }
+
+    public ProjectDTO hireFreelancer(Long projectId, String freelancerCpf, String employerCpf) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
         if (!project.getProjectEmployer().getCpf().equals(employerCpf)) {
             throw new RuntimeException("Unauthorized action");
         }
 
-        // Verificar se o projeto está aberto
         if (!project.isOpen()) {
             throw new RuntimeException("Project is already closed");
         }
 
-        // Buscar o freelancer
         Freelancer freelancer = freelancerRepository.findById(freelancerCpf)
                 .orElseThrow(() -> new RuntimeException("Freelancer not found"));
 
-        // Atualizar o projeto com o freelancer contratado
         project.setHiredFreelancer(freelancer);
-        project.setOpen(false); // Marcar o projeto como fechado para novos interesses
-        project.setStatus("Em andamento"); // Alterar o status para "Em andamento"
+        project.setOpen(false);
+        project.setStatus("Em andamento");
 
-        // Atualizar os interesses no projeto
         project.getInterestedFreelancers().forEach(interest -> {
             if (interest.getFreelancer().getCpf().equals(freelancerCpf)) {
                 interest.setStatus("Aprovado");
@@ -122,13 +134,10 @@ public class ProjectService {
             interestRepository.save(interest);
         });
 
-        // Salvar o projeto e retornar o DTO
         Project savedProject = projectRepository.save(project);
         return mapToDTO(savedProject);
     }
 
-
-    // Atualizar status do projeto
     public Project updateProjectStatus(Long projectId, String newStatus, String employerCpf) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
@@ -150,7 +159,7 @@ public class ProjectService {
         return projectRepository.save(project);
     }
 
-    // Atualizar projeto
+    // ✅ Método para atualizar projeto (resolve o erro no controller)
     public Project updateProject(Long projectId, Project updatedProject, String employerCpf) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
@@ -167,7 +176,6 @@ public class ProjectService {
         return projectRepository.save(project);
     }
 
-    // Deletar projeto
     public void deleteProject(Long projectId, String employerCpf) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
@@ -179,17 +187,14 @@ public class ProjectService {
         projectRepository.delete(project);
     }
 
-    // Listar projetos de um empregador
     public List<Project> getProjectsByEmployer(String employerCpf) {
         return projectRepository.findByProjectEmployerCpf(employerCpf);
     }
 
-    // Listar projetos abertos
     public List<Project> getOpenProjects() {
         return projectRepository.findByOpenTrue();
     }
 
-    // Adicionar interesse de freelancer
     public Interest addInterest(Long projectId, String freelancerCpf) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
@@ -207,7 +212,5 @@ public class ProjectService {
         interest.setStatus("Aguardando resposta");
 
         return interestRepository.save(interest);
-
-
     }
 }
