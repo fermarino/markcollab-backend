@@ -65,9 +65,6 @@ public class EmployerService {
     }
 
     private void validateEmployer(Employer employer) {
-        if (employerRepository.existsByUsername(employer.getUsername())) {
-            throw new RuntimeException("Username already in use");
-        }
         if (employerRepository.existsByEmail(employer.getEmail())) {
             throw new RuntimeException("Email already in use");
         }

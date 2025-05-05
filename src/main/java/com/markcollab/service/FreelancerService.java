@@ -64,9 +64,7 @@ public class FreelancerService {
                 .collect(Collectors.toList());
     }
     private void validateFreelancer(Freelancer freelancer) {
-        if (freelancerRepository.existsByUsername(freelancer.getUsername())) {
-            throw new RuntimeException("Username already in use");
-        }
+
         if (freelancerRepository.existsByEmail(freelancer.getEmail())) {
             throw new RuntimeException("Email already in use");
         }

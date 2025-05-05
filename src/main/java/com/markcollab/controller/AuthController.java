@@ -12,14 +12,11 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final AuthService authService;
-    private final JwtService jwtService;
+    @Autowired
+    private AuthService authService;
 
     @Autowired
-    public AuthController(AuthService authService, JwtService jwtService) {
-        this.authService = authService;
-        this.jwtService = jwtService;
-    }
+    private JwtService jwtService;
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@RequestBody Map<String, Object> body) {
@@ -27,28 +24,26 @@ public class AuthController {
             String role = (String) body.get("role");
             if ("EMPLOYER".equalsIgnoreCase(role)) {
                 authService.registerEmployer(body);
-                return ResponseEntity.ok("Employer registered successfully!");
             } else if ("FREELANCER".equalsIgnoreCase(role)) {
                 authService.registerFreelancer(body);
-                return ResponseEntity.ok("Freelancer registered successfully!");
             } else {
-                return ResponseEntity.badRequest().body("Invalid role.");
+                return ResponseEntity.badRequest().body("Tipo de usuário inválido.");
             }
+            return ResponseEntity.ok("Cadastro realizado com sucesso!");
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-@PostMapping("/login")
-public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> body) {
-    String username = body.get("username");
-    String password = body.get("password");
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> body) {
+        String identifier = body.get("identifier");
+        String password = body.get("password");
 
-    String token = authService.authenticate(username, password);
-    String role = jwtService.extractRole(token);
-    String cpf = authService.getCpf(username); // Obtém o CPF
+        String token = authService.authenticate(identifier, password);
+        String role = jwtService.extractRole(token);
+        String cpf = authService.getCpf(identifier);
 
-    return ResponseEntity.ok(Map.of("token", token, "role", role, "cpf", cpf));
-}
-
+        return ResponseEntity.ok(Map.of("token", token, "role", role, "cpf", cpf));
+    }
 }

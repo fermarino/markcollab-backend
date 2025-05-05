@@ -25,13 +25,37 @@ public class AuthService {
     @Autowired
     private JwtService jwtService;
 
+    public void registerFreelancer(Map<String, Object> body) {
+        String cpf = (String) body.get("cpf");
+        String email = (String) body.get("email");
+        String username = (String) body.get("username");
+
+        if (freelancerRepository.existsById(cpf) ||
+                freelancerRepository.existsByEmail(email) ||
+                freelancerRepository.existsByUsername(username)) {
+            throw new RuntimeException("Dados do freelancer já estão em uso.");
+        }
+
+        Freelancer freelancer = new Freelancer();
+        freelancer.setCpf(cpf);
+        freelancer.setName((String) body.get("name"));
+        freelancer.setUsername(username);
+        freelancer.setEmail(email);
+        freelancer.setPassword(passwordEncoder.encode((String) body.get("password")));
+        freelancer.setRole("FREELANCER");
+
+        freelancerRepository.save(freelancer);
+    }
+
     public void registerEmployer(Map<String, Object> body) {
         String cpf = (String) body.get("cpf");
         String email = (String) body.get("email");
         String username = (String) body.get("username");
 
-        if (employerRepository.existsById(cpf) || employerRepository.existsByEmail(email) || employerRepository.existsByUsername(username)) {
-            throw new RuntimeException("Employer details already in use.");
+        if (employerRepository.existsById(cpf) ||
+                employerRepository.existsByEmail(email) ||
+                employerRepository.existsByUsername(username)) {
+            throw new RuntimeException("Dados do contratante já estão em uso.");
         }
 
         Employer employer = new Employer();
@@ -46,53 +70,41 @@ public class AuthService {
         employerRepository.save(employer);
     }
 
-    public void registerFreelancer(Map<String, Object> body) {
-        String cpf = (String) body.get("cpf");
-        String email = (String) body.get("email");
-        String username = (String) body.get("username");
+    public String authenticate(String identifier, String password) {
+        // Buscar EMPLOYER por email, cpf ou username
+        Employer employer = employerRepository.findByEmail(identifier)
+                .or(() -> employerRepository.findById(identifier))
+                .or(() -> employerRepository.findByUsername(identifier))
+                .orElse(null);
 
-        if (freelancerRepository.existsById(cpf) || freelancerRepository.existsByEmail(email) || freelancerRepository.existsByUsername(username)) {
-            throw new RuntimeException("Freelancer details already in use.");
-        }
-
-        Freelancer freelancer = new Freelancer();
-        freelancer.setCpf(cpf);
-        freelancer.setName((String) body.get("name"));
-        freelancer.setUsername(username);
-        freelancer.setEmail(email);
-        freelancer.setPassword(passwordEncoder.encode((String) body.get("password")));
-        freelancer.setPortfolioLink((String) body.get("portfolioLink"));
-        freelancer.setRole("FREELANCER");
-
-        freelancerRepository.save(freelancer);
-    }
-
-    public String getCpf(String username) {
-    Employer employer = employerRepository.findByUsername(username).orElse(null);
-    if (employer != null) {
-        return employer.getCpf();
-    }
-
-    Freelancer freelancer = freelancerRepository.findByUsername(username).orElse(null);
-    if (freelancer != null) {
-        return freelancer.getCpf();
-    }
-
-    throw new RuntimeException("User not found.");
-}
-
-
-    public String authenticate(String username, String password) {
-        Employer employer = employerRepository.findByUsername(username).orElse(null);
         if (employer != null && passwordEncoder.matches(password, employer.getPassword())) {
             return jwtService.generateToken(employer);
         }
 
-        Freelancer freelancer = freelancerRepository.findByUsername(username).orElse(null);
+        // Buscar FREELANCER por email, cpf ou username
+        Freelancer freelancer = freelancerRepository.findByEmail(identifier)
+                .or(() -> freelancerRepository.findById(identifier))
+                .or(() -> freelancerRepository.findByUsername(identifier))
+                .orElse(null);
+
         if (freelancer != null && passwordEncoder.matches(password, freelancer.getPassword())) {
             return jwtService.generateToken(freelancer);
         }
 
-        throw new RuntimeException("Invalid username or password.");
+        throw new RuntimeException("Credenciais inválidas.");
+    }
+
+    public String getCpf(String identifier) {
+        return employerRepository.findByEmail(identifier)
+                .or(() -> employerRepository.findById(identifier))
+                .or(() -> employerRepository.findByUsername(identifier))
+                .map(Employer::getCpf)
+                .orElseGet(() ->
+                        freelancerRepository.findByEmail(identifier)
+                                .or(() -> freelancerRepository.findById(identifier))
+                                .or(() -> freelancerRepository.findByUsername(identifier))
+                                .map(Freelancer::getCpf)
+                                .orElseThrow(() -> new RuntimeException("Usuário não encontrado."))
+                );
     }
 }

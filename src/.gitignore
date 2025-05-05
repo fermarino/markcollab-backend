@@ -3,6 +3,8 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 .env
 
+src/main/resources/application-secret.properties
+
 # Arquivos de configuração do IntelliJ IDEA
 .idea/
 *.iml
