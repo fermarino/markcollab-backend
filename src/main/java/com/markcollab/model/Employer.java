@@ -14,4 +14,7 @@ public class Employer extends AbstractUser {
 
     @Column(nullable = true)
     private String companyName;
+
+    @Column(nullable = true)
+    private String aboutMe;
 }

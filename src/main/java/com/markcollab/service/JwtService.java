@@ -20,7 +20,8 @@ public class JwtService {
     public String generateToken(AbstractUser user) {
         return Jwts.builder()
                 .setSubject(user.getUsername())
-                .claim("role", user.getRole()) // Inclui a role no token
+                .claim("cpf", user.getCpf()) // ✅ CPF incluído no token
+                .claim("role", user.getRole())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
                 .signWith(SignatureAlgorithm.HS256, secret.getBytes())
@@ -29,6 +30,10 @@ public class JwtService {
 
     public String extractUsername(String token) {
         return getClaims(token).getSubject();
+    }
+
+    public String extractCpf(String token) {
+        return getClaims(token).get("cpf", String.class);
     }
 
     public String extractRole(String token) {

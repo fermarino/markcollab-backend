@@ -21,67 +21,62 @@ public class FreelancerService {
 
     public FreelancerDTO registerFreelancer(Freelancer freelancer) {
         validateFreelancer(freelancer);
-        validatePassword(freelancer.getPassword()); // Validação de senha adicionada
+        validatePassword(freelancer.getPassword());
         freelancer.setRole("FREELANCER");
         freelancer.setPassword(passwordEncoder.encode(freelancer.getPassword()));
-        Freelancer savedFreelancer = freelancerRepository.save(freelancer);
+        Freelancer saved = freelancerRepository.save(freelancer);
 
         FreelancerDTO dto = new FreelancerDTO();
-        dto.setName(savedFreelancer.getName());
-        dto.setUsername(savedFreelancer.getUsername());
-        dto.setEmail(savedFreelancer.getEmail());
-        dto.setPortfolioLink(savedFreelancer.getPortfolioLink());
+        dto.setName(saved.getName());
+        dto.setUsername(saved.getUsername());
+        dto.setEmail(saved.getEmail());
+        dto.setPortfolioLink(saved.getPortfolioLink());
+        dto.setAboutMe(saved.getAboutMe());
+        dto.setExperience(saved.getExperience());
         return dto;
     }
 
-    public Freelancer updateFreelancer(String cpf, Freelancer updatedFreelancer) {
-        Freelancer freelancer = freelancerRepository.findById(cpf)
+    public Freelancer updateFreelancer(String cpf, Freelancer updated) {
+        Freelancer f = freelancerRepository.findById(cpf)
                 .orElseThrow(() -> new RuntimeException("Freelancer not found"));
-        freelancer.setName(updatedFreelancer.getName());
-        freelancer.setUsername(updatedFreelancer.getUsername());
-        freelancer.setEmail(updatedFreelancer.getEmail());
-        freelancer.setPortfolioLink(updatedFreelancer.getPortfolioLink());
-        return freelancerRepository.save(freelancer);
+        f.setName(updated.getName());
+        f.setUsername(updated.getUsername());
+        f.setEmail(updated.getEmail());
+        f.setPortfolioLink(updated.getPortfolioLink());
+        f.setAboutMe(updated.getAboutMe());
+        f.setExperience(updated.getExperience());
+        return freelancerRepository.save(f);
     }
 
     public void deleteFreelancer(String cpf) {
-        Freelancer freelancer = freelancerRepository.findById(cpf)
+        Freelancer f = freelancerRepository.findById(cpf)
                 .orElseThrow(() -> new RuntimeException("Freelancer not found"));
-        freelancerRepository.delete(freelancer);
+        freelancerRepository.delete(f);
     }
 
     public List<FreelancerDTO> getAllFreelancers() {
-        return freelancerRepository.findAll()
-                .stream()
-                .map(freelancer -> {
-                    FreelancerDTO dto = new FreelancerDTO();
-                    dto.setName(freelancer.getName());
-                    dto.setUsername(freelancer.getUsername());
-                    dto.setEmail(freelancer.getEmail());
-                    dto.setPortfolioLink(freelancer.getPortfolioLink());
-                    return dto;
-                })
-                .collect(Collectors.toList());
+        return freelancerRepository.findAll().stream().map(saved -> {
+            FreelancerDTO dto = new FreelancerDTO();
+            dto.setName(saved.getName());
+            dto.setUsername(saved.getUsername());
+            dto.setEmail(saved.getEmail());
+            dto.setPortfolioLink(saved.getPortfolioLink());
+            dto.setAboutMe(saved.getAboutMe());
+            dto.setExperience(saved.getExperience());
+            return dto;
+        }).collect(Collectors.toList());
     }
-    private void validateFreelancer(Freelancer freelancer) {
 
-        if (freelancerRepository.existsByEmail(freelancer.getEmail())) {
+    private void validateFreelancer(Freelancer f) {
+        if (freelancerRepository.existsByEmail(f.getEmail()))
             throw new RuntimeException("Email already in use");
-        }
-        if (freelancerRepository.existsById(freelancer.getCpf())) {
+        if (freelancerRepository.existsById(f.getCpf()))
             throw new RuntimeException("CPF already in use");
-        }
     }
 
-    private void validatePassword(String password) {
-        if (password.length() < 8) {
-            throw new RuntimeException("Password must be at least 8 characters long");
-        }
-        if (!password.matches(".*[A-Z].*")) {
-            throw new RuntimeException("Password must contain at least one uppercase letter");
-        }
-        if (!password.matches(".*\\d.*")) {
-            throw new RuntimeException("Password must contain at least one number");
-        }
+    private void validatePassword(String pw) {
+        if (pw.length() < 8) throw new RuntimeException("Password must be at least 8 characters long");
+        if (!pw.matches(".*[A-Z].*")) throw new RuntimeException("Password must contain at least one uppercase letter");
+        if (!pw.matches(".*\\d.*")) throw new RuntimeException("Password must contain at least one number");
     }
 }

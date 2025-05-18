@@ -14,4 +14,10 @@ public class Freelancer extends AbstractUser {
 
     @Column(nullable = true)
     private String portfolioLink;
+
+    @Column(nullable = true)
+    private String aboutMe;
+
+    @Column(nullable = true)
+    private String experience;
 }

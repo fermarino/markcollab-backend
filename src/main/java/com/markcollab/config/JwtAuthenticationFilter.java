@@ -44,7 +44,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // 🚨 Se for rota pública, passa direto
+        // Libera requisições públicas
         if (isPublicPath(path)) {
             filterChain.doFilter(request, response);
             return;
@@ -52,22 +52,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
+            System.out.println("⚠️ Requisição sem token ou token mal formatado.");
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.getWriter().write("Token ausente ou inválido.");
             return;
         }
 
-        String token = authHeader.substring(7); // Remove "Bearer "
-        String username = jwtService.extractUsername(token);
-        String role = jwtService.extractRole(token);
+        try {
+            String token = authHeader.substring(7); // Remove "Bearer "
+            String username = jwtService.extractUsername(token);
+            String role = jwtService.extractRole(token);
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                    username, null, Collections.singletonList(() -> role)
-            );
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                System.out.println("✅ Autenticando usuário: " + username + " | Role: " + role);
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        username, null, Collections.singletonList(() -> role)
+                );
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+
+            filterChain.doFilter(request, response);
+        } catch (ExpiredJwtException | MalformedJwtException | SignatureException e) {
+            System.out.println("❌ Token JWT inválido: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.getWriter().write("Token inválido.");
         }
-
-        filterChain.doFilter(request, response);
     }
 }

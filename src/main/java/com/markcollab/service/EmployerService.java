@@ -21,67 +21,59 @@ public class EmployerService {
 
     public EmployerDTO registerEmployer(Employer employer) {
         validateEmployer(employer);
-        validatePassword(employer.getPassword()); // Validação de senha adicionada
+        validatePassword(employer.getPassword());
         employer.setRole("EMPLOYER");
         employer.setPassword(passwordEncoder.encode(employer.getPassword()));
-        Employer savedEmployer = employerRepository.save(employer);
+        Employer saved = employerRepository.save(employer);
 
         EmployerDTO dto = new EmployerDTO();
-        dto.setName(savedEmployer.getName());
-        dto.setUsername(savedEmployer.getUsername());
-        dto.setEmail(savedEmployer.getEmail());
-        dto.setCompanyName(savedEmployer.getCompanyName());
+        dto.setName(saved.getName());
+        dto.setUsername(saved.getUsername());
+        dto.setEmail(saved.getEmail());
+        dto.setCompanyName(saved.getCompanyName());
+        dto.setAboutMe(saved.getAboutMe());
         return dto;
     }
 
-    public Employer updateEmployer(String cpf, Employer updatedEmployer) {
-        Employer employer = employerRepository.findById(cpf)
+    public Employer updateEmployer(String cpf, Employer updated) {
+        Employer e = employerRepository.findById(cpf)
                 .orElseThrow(() -> new RuntimeException("Employer not found"));
-        employer.setName(updatedEmployer.getName());
-        employer.setUsername(updatedEmployer.getUsername());
-        employer.setEmail(updatedEmployer.getEmail());
-        employer.setCompanyName(updatedEmployer.getCompanyName());
-        return employerRepository.save(employer);
+        e.setName(updated.getName());
+        e.setUsername(updated.getUsername());
+        e.setEmail(updated.getEmail());
+        e.setCompanyName(updated.getCompanyName());
+        e.setAboutMe(updated.getAboutMe());
+        return employerRepository.save(e);
     }
 
     public void deleteEmployer(String cpf) {
-        Employer employer = employerRepository.findById(cpf)
+        Employer e = employerRepository.findById(cpf)
                 .orElseThrow(() -> new RuntimeException("Employer not found"));
-        employerRepository.delete(employer);
+        employerRepository.delete(e);
     }
 
     public List<EmployerDTO> getAllEmployers() {
-        return employerRepository.findAll()
-                .stream()
-                .map(employer -> {
-                    EmployerDTO dto = new EmployerDTO();
-                    dto.setName(employer.getName());
-                    dto.setUsername(employer.getUsername());
-                    dto.setEmail(employer.getEmail());
-                    dto.setCompanyName(employer.getCompanyName());
-                    return dto;
-                })
-                .collect(Collectors.toList());
+        return employerRepository.findAll().stream().map(saved -> {
+            EmployerDTO dto = new EmployerDTO();
+            dto.setName(saved.getName());
+            dto.setUsername(saved.getUsername());
+            dto.setEmail(saved.getEmail());
+            dto.setCompanyName(saved.getCompanyName());
+            dto.setAboutMe(saved.getAboutMe());
+            return dto;
+        }).collect(Collectors.toList());
     }
 
-    private void validateEmployer(Employer employer) {
-        if (employerRepository.existsByEmail(employer.getEmail())) {
+    private void validateEmployer(Employer e) {
+        if (employerRepository.existsByEmail(e.getEmail()))
             throw new RuntimeException("Email already in use");
-        }
-        if (employerRepository.existsById(employer.getCpf())) {
+        if (employerRepository.existsById(e.getCpf()))
             throw new RuntimeException("CPF already in use");
-        }
     }
 
-    private void validatePassword(String password) {
-        if (password.length() < 8) {
-            throw new RuntimeException("Password must be at least 8 characters long");
-        }
-        if (!password.matches(".*[A-Z].*")) {
-            throw new RuntimeException("Password must contain at least one uppercase letter");
-        }
-        if (!password.matches(".*\\d.*")) {
-            throw new RuntimeException("Password must contain at least one number");
-        }
+    private void validatePassword(String pw) {
+        if (pw.length() < 8) throw new RuntimeException("Password must be at least 8 characters long");
+        if (!pw.matches(".*[A-Z].*")) throw new RuntimeException("Password must contain at least one uppercase letter");
+        if (!pw.matches(".*\\d.*")) throw new RuntimeException("Password must contain at least one number");
     }
 }

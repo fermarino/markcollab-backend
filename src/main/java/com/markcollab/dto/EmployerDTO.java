@@ -8,4 +8,5 @@ public class EmployerDTO {
     private String username;
     private String email;
     private String companyName;
+    private String aboutMe;
 }

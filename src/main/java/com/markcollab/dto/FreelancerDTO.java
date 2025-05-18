@@ -8,4 +8,6 @@ public class FreelancerDTO {
     private String username;
     private String email;
     private String portfolioLink;
+    private String aboutMe;
+    private String experience;
 }
