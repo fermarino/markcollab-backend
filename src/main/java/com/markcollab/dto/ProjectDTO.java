@@ -1,11 +1,10 @@
 package com.markcollab.dto;
 
-import lombok.Data;
 import lombok.Builder;
-import lombok.AccessLevel;
+import lombok.Data;
 
-@Builder(access = AccessLevel.PUBLIC)
 @Data
+@Builder
 public class ProjectDTO {
     private Long projectId;
     private String projectTitle;

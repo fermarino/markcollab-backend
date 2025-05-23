@@ -20,6 +20,7 @@ import java.util.List;
 
 @Service
 public class ProjectService {
+
     private final ProjectRepository projectRepository;
 
     @Autowired
@@ -32,31 +33,29 @@ public class ProjectService {
     private EmployerRepository employerRepository;
 
     @Autowired
-    private IAService iaService;  // ✅ Injetando IAService aqui
+    private IAService iaService;
 
     @Autowired
     public ProjectService(ProjectRepository projectRepository) {
         this.projectRepository = projectRepository;
     }
 
-    public List<Project> findAll() {
-        return projectRepository.findAll();
+    public List<ProjectDTO> getOpenProjects() {
+        List<Project> projects = projectRepository.findByOpenTrue();
+        //System.out.println("🛠 Service: Total de projetos abertos no banco: " + projects.size());
+
+        List<ProjectDTO> projectDTOs = projects.stream()
+                .map(this::mapToDTO)
+                .toList();
+
+        //System.out.println("🎯 Service: Total de DTOs convertidos: " + projectDTOs.size());
+        return projectDTOs;
     }
 
-    // Criar projeto
-    public ProjectDTO createProject(Project project, String employerCpf) {
-        Employer employer = employerRepository.findById(employerCpf)
-                .orElseThrow(() -> new RuntimeException("Employer not found"));
-        project.setProjectEmployer(employer);
-        project.setOpen(true);
-        project.setStatus("Aberto");
-        Project savedProject = projectRepository.save(project);
 
-        return mapToDTO(savedProject);
-    }
 
-    // Mapear projeto para DTO
-    private ProjectDTO mapToDTO(Project project) {
+
+    public ProjectDTO mapToDTO(Project project) {
         Employer employer = project.getProjectEmployer();
         EmployerDTO employerDTO = new EmployerDTO();
         employerDTO.setName(employer.getName());
@@ -87,7 +86,16 @@ public class ProjectService {
                 .build();
     }
 
-    // ✅ Novo método: gerar descrição com IA
+    public ProjectDTO createProject(Project project, String employerCpf) {
+        Employer employer = employerRepository.findById(employerCpf)
+                .orElseThrow(() -> new RuntimeException("Employer not found"));
+        project.setProjectEmployer(employer);
+        project.setOpen(true);
+        project.setStatus("Aberto");
+        Project savedProject = projectRepository.save(project);
+        return mapToDTO(savedProject);
+    }
+
     public ProjectDTO generateProjectDescription(Long projectId) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
@@ -101,7 +109,6 @@ public class ProjectService {
         ProjectIAResponseDTO iaResponse = iaService.gerarDescricao(iaRequest);
 
         project.setProjectDescription(iaResponse.getDescricao());
-
         Project savedProject = projectRepository.save(project);
         return mapToDTO(savedProject);
     }
@@ -159,7 +166,6 @@ public class ProjectService {
         return projectRepository.save(project);
     }
 
-    // ✅ Método para atualizar projeto (resolve o erro no controller)
     public Project updateProject(Long projectId, Project updatedProject, String employerCpf) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
@@ -189,10 +195,6 @@ public class ProjectService {
 
     public List<Project> getProjectsByEmployer(String employerCpf) {
         return projectRepository.findByProjectEmployerCpf(employerCpf);
-    }
-
-    public List<Project> getOpenProjects() {
-        return projectRepository.findByOpenTrue();
     }
 
     public Interest addInterest(Long projectId, String freelancerCpf) {

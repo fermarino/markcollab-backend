@@ -61,16 +61,21 @@ public class ProjectController {
     }
 
     @GetMapping("/open")
-    public ResponseEntity<List<Project>> getOpenProjects() {
-        return ResponseEntity.ok(projectService.findAll());
+    public ResponseEntity<List<ProjectDTO>> getOpenProjects() {
+        // System.out.println("➡️ Controller: Recebida requisição GET /api/projects/open");
+        List<ProjectDTO> projects = projectService.getOpenProjects();
+       // System.out.println("✅ Controller: Projetos encontrados: " + projects.size());
+        return ResponseEntity.ok(projects);
     }
+
+
+
 
     @PostMapping("/{projectId}/interest/{freelancerCpf}")
     public ResponseEntity<Interest> addInterest(@PathVariable Long projectId, @PathVariable String freelancerCpf) {
         return ResponseEntity.ok(projectService.addInterest(projectId, freelancerCpf));
     }
 
-    // ✅ Novo endpoint para gerar descrição com IA para projeto
     @PostMapping("/{projectId}/generate-description")
     public ResponseEntity<ProjectDTO> generateProjectDescription(@PathVariable Long projectId) {
         ProjectDTO updatedProject = projectService.generateProjectDescription(projectId);

@@ -1,5 +1,6 @@
 package com.markcollab.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -14,13 +15,14 @@ public class Interest {
 
     @ManyToOne
     @JoinColumn(name = "project_id", nullable = false)
-    private Project project; // Projeto associado ao interesse
+    @JsonIgnore
+    private Project project;
 
     @ManyToOne
     @JoinColumn(name = "freelancer_cpf", nullable = false)
-    private Freelancer freelancer; // Freelancer que demonstrou interesse
+    @JsonIgnore
+    private Freelancer freelancer;
 
     @Column(nullable = false)
-    private String status = "Aguardando resposta"; // Status do interesse (Aguardando resposta, Aprovado, Recusado)
+    private String status = "Aguardando resposta";
 }
-    
