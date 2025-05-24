@@ -3,6 +3,7 @@ package com.markcollab.controller;
 import com.markcollab.dto.FreelancerDTO;
 import com.markcollab.model.Freelancer;
 import com.markcollab.service.FreelancerService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,27 +14,27 @@ import java.util.List;
 @RequestMapping("/api/freelancers")
 public class FreelancerController {
 
-    @Autowired
-    private FreelancerService freelancerService;
+    @Autowired private FreelancerService service;
 
     @PostMapping
-    public ResponseEntity<FreelancerDTO> registerFreelancer(@RequestBody Freelancer freelancer) {
-        return ResponseEntity.ok(freelancerService.registerFreelancer(freelancer));
+    public ResponseEntity<FreelancerDTO> create(@Valid @RequestBody Freelancer f) {
+        return ResponseEntity.ok(service.registerFreelancer(f));
     }
 
     @PutMapping("/{cpf}")
-    public ResponseEntity<Freelancer> updateFreelancer(@PathVariable String cpf, @RequestBody Freelancer freelancer) {
-        return ResponseEntity.ok(freelancerService.updateFreelancer(cpf, freelancer));
+    public ResponseEntity<Freelancer> update(@PathVariable String cpf,
+                                             @Valid @RequestBody Freelancer f) {
+        return ResponseEntity.ok(service.updateFreelancer(cpf, f));
     }
 
     @DeleteMapping("/{cpf}")
-    public ResponseEntity<Void> deleteFreelancer(@PathVariable String cpf) {
-        freelancerService.deleteFreelancer(cpf);
+    public ResponseEntity<Void> delete(@PathVariable String cpf) {
+        service.deleteFreelancer(cpf);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping
-    public ResponseEntity<List<FreelancerDTO>> getAllFreelancers() {
-        return ResponseEntity.ok(freelancerService.getAllFreelancers());
+    public ResponseEntity<List<FreelancerDTO>> list() {
+        return ResponseEntity.ok(service.getAllFreelancers());
     }
 }

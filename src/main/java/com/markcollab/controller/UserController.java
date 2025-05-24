@@ -1,11 +1,13 @@
 package com.markcollab.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.markcollab.exception.UnauthorizedException;
 import com.markcollab.model.Employer;
 import com.markcollab.model.Freelancer;
 import com.markcollab.repository.EmployerRepository;
 import com.markcollab.repository.FreelancerRepository;
 import com.markcollab.service.JwtService;
+import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,65 +19,53 @@ import java.util.Map;
 @RequestMapping("/api/user")
 public class UserController {
 
-    @Autowired
-    private FreelancerRepository freelancerRepository;
-
-    @Autowired
-    private EmployerRepository employerRepository;
-
-    @Autowired
-    private JwtService jwtService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    @Autowired private FreelancerRepository freelancerRepo;
+    @Autowired private EmployerRepository employerRepo;
+    @Autowired private JwtService jwtService;
+    @Autowired private ObjectMapper objectMapper;
 
     @GetMapping("/me")
-    public ResponseEntity<?> getLoggedUser(HttpServletRequest request) {
-        String cpf = extractCpfFromRequest(request);
-        if (cpf == null) return ResponseEntity.status(401).body("Token inválido");
-
-        return freelancerRepository.findById(cpf)
+    public ResponseEntity<?> me(HttpServletRequest req) {
+        String cpf = extractCpf(req);
+        return freelancerRepo.findById(cpf)
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .or(() -> employerRepository.findById(cpf).map(ResponseEntity::ok))
-                .orElse(ResponseEntity.status(404).body("Usuário não encontrado"));
+                .or(() -> employerRepo.findById(cpf).map(ResponseEntity::ok))
+                .orElseThrow(() -> new UnauthorizedException("Usuário não encontrado."));
     }
 
     @PutMapping("/me/update")
-    public ResponseEntity<?> updateLoggedUser(HttpServletRequest request, @RequestBody Map<String, Object> data) {
-        String cpf = extractCpfFromRequest(request);
-        if (cpf == null) return ResponseEntity.status(401).body("Token inválido");
+    public ResponseEntity<?> updateMe(HttpServletRequest req,
+                                      @Valid @RequestBody Map<String,Object> data) {
+        String cpf = extractCpf(req);
 
-        if (freelancerRepository.findById(cpf).isPresent()) {
-            Freelancer existing = freelancerRepository.findById(cpf).get();
-            Freelancer updated = objectMapper.convertValue(data, Freelancer.class);
-
-            existing.setName(updated.getName());
-            existing.setUsername(updated.getUsername());
-            existing.setEmail(updated.getEmail());
-            existing.setAboutMe(updated.getAboutMe());
-            existing.setExperience(updated.getExperience());
-
-            return ResponseEntity.ok(freelancerRepository.save(existing));
-        } else if (employerRepository.findById(cpf).isPresent()) {
-            Employer existing = employerRepository.findById(cpf).get();
-            Employer updated = objectMapper.convertValue(data, Employer.class);
-
-            existing.setName(updated.getName());
-            existing.setUsername(updated.getUsername());
-            existing.setEmail(updated.getEmail());
-            existing.setAboutMe(updated.getAboutMe());
-            existing.setCompanyName(updated.getCompanyName());
-
-            return ResponseEntity.ok(employerRepository.save(existing));
+        if (freelancerRepo.existsById(cpf)) {
+            Freelancer ex = freelancerRepo.findById(cpf).get();
+            Freelancer up = objectMapper.convertValue(data, Freelancer.class);
+            ex.setName(up.getName());
+            ex.setUsername(up.getUsername());
+            ex.setEmail(up.getEmail());
+            ex.setAboutMe(up.getAboutMe());
+            ex.setExperience(up.getExperience());
+            return ResponseEntity.ok(freelancerRepo.save(ex));
         }
 
-        return ResponseEntity.status(404).body("Usuário não encontrado");
+        if (employerRepo.existsById(cpf)) {
+            Employer ex = employerRepo.findById(cpf).get();
+            Employer up = objectMapper.convertValue(data, Employer.class);
+            ex.setName(up.getName());
+            ex.setUsername(up.getUsername());
+            ex.setEmail(up.getEmail());
+            ex.setAboutMe(up.getAboutMe());
+            ex.setCompanyName(up.getCompanyName());
+            return ResponseEntity.ok(employerRepo.save(ex));
+        }
+
+        throw new UnauthorizedException("Usuário não encontrado.");
     }
 
-    private String extractCpfFromRequest(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) return null;
-        String token = authHeader.substring(7);
-        return jwtService.extractCpf(token);
+    private String extractCpf(HttpServletRequest req) {
+        String h = req.getHeader("Authorization");
+        if (h==null||!h.startsWith("Bearer ")) throw new UnauthorizedException("Token inválido.");
+        return jwtService.extractCpf(h.substring(7));
     }
 }

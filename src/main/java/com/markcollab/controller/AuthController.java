@@ -1,8 +1,13 @@
+// src/main/java/com/markcollab/controller/AuthController.java
 package com.markcollab.controller;
 
+import com.markcollab.payload.AuthRegisterRequest;
+import com.markcollab.payload.AuthLoginRequest;
+import com.markcollab.payload.MessageResponse;
 import com.markcollab.service.AuthService;
 import com.markcollab.service.JwtService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,40 +15,27 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    private AuthService authService;
-
-    @Autowired
-    private JwtService jwtService;
+    private final AuthService authService;
+    private final JwtService jwtService;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody Map<String, Object> body) {
-        try {
-            String role = (String) body.get("role");
-            if ("EMPLOYER".equalsIgnoreCase(role)) {
-                authService.registerEmployer(body);
-            } else if ("FREELANCER".equalsIgnoreCase(role)) {
-                authService.registerFreelancer(body);
-            } else {
-                return ResponseEntity.badRequest().body("Tipo de usuário inválido.");
-            }
-            return ResponseEntity.ok("Cadastro realizado com sucesso!");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<MessageResponse> register(
+            @Valid @RequestBody AuthRegisterRequest req) {
+        authService.register(req);
+        return ResponseEntity.ok(new MessageResponse("Cadastro realizado com sucesso!"));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody Map<String, String> body) {
-        String identifier = body.get("identifier");
-        String password = body.get("password");
-
-        String token = authService.authenticate(identifier, password);
-        String role = jwtService.extractRole(token);
-        String cpf = authService.getCpf(identifier);
-
-        return ResponseEntity.ok(Map.of("token", token, "role", role, "cpf", cpf));
+    public ResponseEntity<Map<String,String>> login(
+            @Valid @RequestBody AuthLoginRequest req) {
+        String token = authService.authenticate(req.getIdentifier(), req.getPassword());
+        return ResponseEntity.ok(Map.of(
+                "token", token,
+                "role",  jwtService.extractRole(token),
+                "cpf",   jwtService.extractCpf(token)
+        ));
     }
 }

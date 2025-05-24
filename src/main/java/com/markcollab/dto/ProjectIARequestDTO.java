@@ -8,12 +8,12 @@ import lombok.Data;
 @Builder
 public class ProjectIARequestDTO {
 
-    @JsonProperty("titulo")
+    @JsonProperty("name")
     private String projectTitle;
 
-    @JsonProperty("especificacoes")
+    @JsonProperty("specifications")
     private String projectSpecifications;
 
-    @JsonProperty("prazo")
+    @JsonProperty("deadline")
     private String projectDeadline;
 }
