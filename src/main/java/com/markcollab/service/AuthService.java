@@ -1,4 +1,3 @@
-// src/main/java/com/markcollab/service/AuthService.java
 package com.markcollab.service;
 
 import com.markcollab.exception.BadRequestException;

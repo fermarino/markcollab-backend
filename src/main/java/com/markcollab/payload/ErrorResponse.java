@@ -1,4 +1,3 @@
-// src/main/java/com/markcollab/payload/ErrorResponse.java
 package com.markcollab.payload;
 
 import lombok.Data;

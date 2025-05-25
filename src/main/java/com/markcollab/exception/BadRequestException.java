@@ -1,4 +1,3 @@
-// src/main/java/com/markcollab/exception/BadRequestException.java
 package com.markcollab.exception;
 
 import org.springframework.http.HttpStatus;

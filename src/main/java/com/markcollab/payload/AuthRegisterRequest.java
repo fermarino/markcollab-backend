@@ -1,4 +1,3 @@
-// src/main/java/com/markcollab/payload/AuthRegisterRequest.java
 package com.markcollab.payload;
 
 import jakarta.validation.constraints.*;

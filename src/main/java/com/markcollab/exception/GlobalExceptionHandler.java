@@ -1,4 +1,3 @@
-// src/main/java/com/markcollab/exception/GlobalExceptionHandler.java
 package com.markcollab.exception;
 
 import com.markcollab.payload.ErrorResponse;

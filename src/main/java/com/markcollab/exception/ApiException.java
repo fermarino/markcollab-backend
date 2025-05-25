@@ -1,4 +1,3 @@
-// src/main/java/com/markcollab/exception/ApiException.java
 package com.markcollab.exception;
 
 import lombok.Getter;
