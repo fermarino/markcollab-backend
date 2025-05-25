@@ -15,70 +15,84 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost:5173")
 public class ProjectController {
 
-    @Autowired
-    private ProjectService projectService;
+    @Autowired private ProjectService projectService;
 
-    @Autowired
-    public ProjectController(ProjectService projectService) {
-        this.projectService = projectService;
+    @GetMapping("/open")
+    public ResponseEntity<List<ProjectDTO>> getOpenProjects() {
+        return ResponseEntity.ok(projectService.getOpenProjects());
     }
 
     @PostMapping("/{employerCpf}")
-    public ResponseEntity<ProjectDTO> createProject(@RequestBody Project project, @PathVariable String employerCpf) {
-        ProjectDTO createdProject = projectService.createProject(project, employerCpf);
-        return ResponseEntity.ok(createdProject);
+    public ResponseEntity<ProjectDTO> createProject(
+            @PathVariable String employerCpf,
+            @RequestBody Project project) {
+        return ResponseEntity.ok(
+                projectService.createProject(project, employerCpf)
+        );
     }
 
     @PutMapping("/{projectId}/status/{employerCpf}")
-    public ResponseEntity<Project> updateProjectStatus(@PathVariable Long projectId,
-                                                       @PathVariable String employerCpf,
-                                                       @RequestBody String newStatus) {
-        return ResponseEntity.ok(projectService.updateProjectStatus(projectId, newStatus, employerCpf));
+    public ResponseEntity<Project> updateProjectStatus(
+            @PathVariable Long projectId,
+            @PathVariable String employerCpf,
+            @RequestBody String newStatus) {
+        return ResponseEntity.ok(
+                projectService.updateProjectStatus(projectId, newStatus, employerCpf)
+        );
     }
 
     @PostMapping("/{projectId}/hire/{freelancerCpf}/{employerCpf}")
-    public ResponseEntity<ProjectDTO> hireFreelancer(@PathVariable Long projectId,
-                                                     @PathVariable String freelancerCpf,
-                                                     @PathVariable String employerCpf) {
-        return ResponseEntity.ok(projectService.hireFreelancer(projectId, freelancerCpf, employerCpf));
+    public ResponseEntity<ProjectDTO> hireFreelancer(
+            @PathVariable Long projectId,
+            @PathVariable String freelancerCpf,
+            @PathVariable String employerCpf) {
+        return ResponseEntity.ok(
+                projectService.hireFreelancer(projectId, freelancerCpf, employerCpf)
+        );
     }
 
     @PutMapping("/{projectId}/{employerCpf}")
-    public ResponseEntity<Project> updateProject(@PathVariable Long projectId, @RequestBody Project updatedProject,
-                                                 @PathVariable String employerCpf) {
-        return ResponseEntity.ok(projectService.updateProject(projectId, updatedProject, employerCpf));
+    public ResponseEntity<Project> updateProject(
+            @PathVariable Long projectId,
+            @RequestBody Project updatedProject,
+            @PathVariable String employerCpf) {
+        return ResponseEntity.ok(
+                projectService.updateProject(projectId, updatedProject, employerCpf)
+        );
     }
 
     @DeleteMapping("/{projectId}/{employerCpf}")
-    public ResponseEntity<Void> deleteProject(@PathVariable Long projectId, @PathVariable String employerCpf) {
+    public ResponseEntity<Void> deleteProject(
+            @PathVariable Long projectId,
+            @PathVariable String employerCpf) {
         projectService.deleteProject(projectId, employerCpf);
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/employer/{employerCpf}")
-    public ResponseEntity<List<Project>> getProjectsByEmployer(@PathVariable String employerCpf) {
-        return ResponseEntity.ok(projectService.getProjectsByEmployer(employerCpf));
-    }
-
-    @GetMapping("/open")
-    public ResponseEntity<List<ProjectDTO>> getOpenProjects() {
-        // System.out.println("➡️ Controller: Recebida requisição GET /api/projects/open");
-        List<ProjectDTO> projects = projectService.getOpenProjects();
-       // System.out.println("✅ Controller: Projetos encontrados: " + projects.size());
-        return ResponseEntity.ok(projects);
-    }
-
-
-
-
     @PostMapping("/{projectId}/interest/{freelancerCpf}")
-    public ResponseEntity<Interest> addInterest(@PathVariable Long projectId, @PathVariable String freelancerCpf) {
-        return ResponseEntity.ok(projectService.addInterest(projectId, freelancerCpf));
+    public ResponseEntity<Interest> addInterest(
+            @PathVariable Long projectId,
+            @PathVariable String freelancerCpf) {
+        return ResponseEntity.ok(
+                projectService.addInterest(projectId, freelancerCpf)
+        );
     }
 
     @PostMapping("/{projectId}/generate-description")
-    public ResponseEntity<ProjectDTO> generateProjectDescription(@PathVariable Long projectId) {
-        ProjectDTO updatedProject = projectService.generateProjectDescription(projectId);
-        return ResponseEntity.ok(updatedProject);
+    public ResponseEntity<ProjectDTO> generateDescription(
+            @PathVariable Long projectId) {
+        return ResponseEntity.ok(
+                projectService.generateProjectDescription(projectId)
+        );
+    }
+
+    @GetMapping("/employer/{employerCpf}")
+    public ResponseEntity<List<ProjectDTO>> getByEmployer(
+            @PathVariable String employerCpf) {
+        // se desejar filtrar por employer:
+        // adaptar service para retornar List<ProjectDTO>
+        return ResponseEntity.ok(
+                projectService.getOpenProjects() // ou outro método
+        );
     }
 }

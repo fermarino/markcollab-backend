@@ -3,6 +3,8 @@ package com.markcollab.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.time.LocalDate;
 import java.util.List;
 
 @Entity
@@ -20,6 +22,9 @@ public class Project {
     private Double projectPrice;
     private boolean open;
     private String status;
+
+    // Novo campo: prazo de entrega
+    private LocalDate deadline;
 
     @ManyToOne
     @JoinColumn(name = "employer_cpf")
