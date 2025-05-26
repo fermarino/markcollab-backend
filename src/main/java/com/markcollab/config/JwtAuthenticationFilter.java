@@ -26,12 +26,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String[] PUBLIC_PATHS = {
             "/api/auth/register",
-            "/api/auth/login"
+            "/api/auth/login",
+            "/api/ia/gerar-descricao",
+            "/api/email/enviar-contato",
+            "/api/email/teste-debug"
     };
 
     private boolean isPublicPath(String path) {
         for (String publicPath : PUBLIC_PATHS) {
-            if (path.startsWith(publicPath)) return true;
+            if (path.equals(publicPath) || path.startsWith(publicPath + "/")) {
+                return true;
+            }
         }
         return false;
     }
@@ -43,9 +48,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getRequestURI();
+        System.out.println("🔍 Requisição recebida: " + path); // <-- log de depuração
 
         // Libera requisições públicas
         if (isPublicPath(path)) {
+            System.out.println("✅ Rota pública liberada: " + path); // <-- log de liberação
             filterChain.doFilter(request, response);
             return;
         }
