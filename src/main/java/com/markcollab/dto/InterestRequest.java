@@ -2,6 +2,9 @@ package com.markcollab.dto;
 
 import lombok.Data;
 
+/**
+ * Usado pelo método POST /api/interests/ para criar uma nova proposta.
+ */
 @Data
 public class InterestRequest {
     private Long projectId;

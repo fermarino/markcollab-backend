@@ -1,3 +1,4 @@
+// src/main/java/com/markcollab/service/FreelancerService.java
 package com.markcollab.service;
 
 import com.markcollab.dto.FreelancerDTO;
@@ -25,15 +26,7 @@ public class FreelancerService {
         freelancer.setRole("FREELANCER");
         freelancer.setPassword(passwordEncoder.encode(freelancer.getPassword()));
         Freelancer saved = freelancerRepository.save(freelancer);
-
-        FreelancerDTO dto = new FreelancerDTO();
-        dto.setName(saved.getName());
-        dto.setUsername(saved.getUsername());
-        dto.setEmail(saved.getEmail());
-        dto.setPortfolioLink(saved.getPortfolioLink());
-        dto.setAboutMe(saved.getAboutMe());
-        dto.setExperience(saved.getExperience());
-        return dto;
+        return mapToDTO(saved);
     }
 
     public Freelancer updateFreelancer(String cpf, Freelancer updated) {
@@ -55,16 +48,26 @@ public class FreelancerService {
     }
 
     public List<FreelancerDTO> getAllFreelancers() {
-        return freelancerRepository.findAll().stream().map(saved -> {
-            FreelancerDTO dto = new FreelancerDTO();
-            dto.setName(saved.getName());
-            dto.setUsername(saved.getUsername());
-            dto.setEmail(saved.getEmail());
-            dto.setPortfolioLink(saved.getPortfolioLink());
-            dto.setAboutMe(saved.getAboutMe());
-            dto.setExperience(saved.getExperience());
-            return dto;
-        }).collect(Collectors.toList());
+        return freelancerRepository.findAll().stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+    public FreelancerDTO getFreelancerByCpf(String cpf) {
+        Freelancer f = freelancerRepository.findById(cpf)
+                .orElseThrow(() -> new RuntimeException("Freelancer not found"));
+        return mapToDTO(f);
+    }
+
+    private FreelancerDTO mapToDTO(Freelancer f) {
+        FreelancerDTO dto = new FreelancerDTO();
+        dto.setName(f.getName());
+        dto.setUsername(f.getUsername());
+        dto.setEmail(f.getEmail());
+        dto.setPortfolioLink(f.getPortfolioLink());
+        dto.setAboutMe(f.getAboutMe());
+        dto.setExperience(f.getExperience());
+        return dto;
     }
 
     private void validateFreelancer(Freelancer f) {

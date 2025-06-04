@@ -23,7 +23,6 @@ public class Project {
     private boolean open;
     private String status;
 
-    // Novo campo: prazo de entrega
     private LocalDate deadline;
 
     @ManyToOne
@@ -34,6 +33,10 @@ public class Project {
     @JoinColumn(name = "hired_freelancer_cpf")
     private Freelancer hiredFreelancer;
 
+    /**
+     * Observação: a fetch type padrão para OneToMany é LAZY.
+     * Graças ao @Transactional no service, não haverá LazyInitializationException.
+     */
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Interest> interestedFreelancers;

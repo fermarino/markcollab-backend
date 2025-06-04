@@ -1,3 +1,4 @@
+// src/main/java/com/markcollab/controller/InterestController.java
 package com.markcollab.controller;
 
 import com.markcollab.dto.InterestRequest;
@@ -16,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/interests")
+@CrossOrigin(origins = "http://localhost:5173")
 public class InterestController {
 
     private final InterestRepository interestRepository;
@@ -30,9 +32,12 @@ public class InterestController {
         this.freelancerRepository = freelancerRepository;
     }
 
+    /**
+     * Cria uma nova proposta (Interest) para este projeto.
+     * POST /api/interests/
+     */
     @PostMapping("/")
     public ResponseEntity<Interest> criarProposta(@RequestBody InterestRequest proposta) {
-
         Project project = projectRepository.findById(proposta.getProjectId())
                 .orElseThrow(() -> new ResourceNotFoundException("Projeto não encontrado"));
 
@@ -43,8 +48,6 @@ public class InterestController {
         interest.setProject(project);
         interest.setFreelancer(freelancer);
         interest.setStatus("Aguardando resposta");
-
-        // Mapeando os campos da proposta
         interest.setProposalValue(proposta.getProposalValue());
         interest.setProposalDescription(proposta.getProposalDescription());
         interest.setDeliveryDate(proposta.getDeliveryDate());
@@ -53,24 +56,59 @@ public class InterestController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedInterest);
     }
 
+    /**
+     * Lista todas as propostas para um determinado projeto.
+     * GET /api/interests/project/{projectId}
+     */
     @GetMapping("/project/{projectId}")
     public ResponseEntity<List<InterestResponseDTO>> listarPropostasPorProjeto(@PathVariable Long projectId) {
         List<Interest> propostas = interestRepository.findByProject_ProjectId(projectId);
 
-        List<InterestResponseDTO> resposta = propostas.stream().map(interest ->
-                new InterestResponseDTO(
-                        interest.getId(),
-                        interest.getStatus(),
-                        interest.getProposalValue(),
-                        interest.getProposalDescription(),
-                        interest.getDeliveryDate()
-                )
-        ).toList();
+        List<InterestResponseDTO> resposta = propostas.stream().map(interest -> {
+            Freelancer freelancer = interest.getFreelancer();
+            return new InterestResponseDTO(
+                    interest.getId(),
+                    interest.getStatus(),
+                    interest.getProposalValue(),
+                    interest.getProposalDescription(),
+                    interest.getDeliveryDate(),
+                    freelancer.getCpf(),
+                    freelancer.getName()
+            );
+        }).toList();
 
         return ResponseEntity.ok(resposta);
     }
 
-    // Exceção personalizada para recurso não encontrado
+    /**
+     * Atualiza apenas o status de uma proposta (Interest).
+     * PUT /api/interests/{interestId}/status
+     * Body: "Aprovado" ou "Recusado"
+     */
+    @PutMapping("/{interestId}/status")
+    public ResponseEntity<InterestResponseDTO> updateInterestStatus(
+            @PathVariable Long interestId,
+            @RequestBody String newStatus) {
+
+        Interest interest = interestRepository.findById(interestId)
+                .orElseThrow(() -> new ResourceNotFoundException("Interest não encontrado"));
+
+        interest.setStatus(newStatus);
+        interestRepository.save(interest);
+
+        Freelancer freelancer = interest.getFreelancer();
+        InterestResponseDTO dto = new InterestResponseDTO(
+                interest.getId(),
+                interest.getStatus(),
+                interest.getProposalValue(),
+                interest.getProposalDescription(),
+                interest.getDeliveryDate(),
+                freelancer.getCpf(),
+                freelancer.getName()
+        );
+        return ResponseEntity.ok(dto);
+    }
+
     @ResponseStatus(HttpStatus.NOT_FOUND)
     private static class ResourceNotFoundException extends RuntimeException {
         public ResourceNotFoundException(String message) {

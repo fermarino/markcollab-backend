@@ -6,6 +6,4 @@ import java.util.List;
 
 public interface InterestRepository extends JpaRepository<Interest, Long> {
     List<Interest> findByProject_ProjectId(Long projectId);
-
-    List<Interest> findByFreelancerCpf(String cpf); // Interesses de um freelancer
 }
