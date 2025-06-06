@@ -18,7 +18,7 @@ public class IAService {
     }
 
     public ProjectIAResponseDTO gerarDescricao(ProjectIARequestDTO iaRequest) {
-        String url = "http://localhost:8000/gerar-descricao";
+        String url = "https://fastapi-markcollabia.onrender.com/gerar-descricao";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
