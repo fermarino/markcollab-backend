@@ -60,6 +60,8 @@ public class AuthService {
     }
 
     public String authenticate(String id, String pw) {
+        System.out.println("--- [DEBUG] Iniciando autenticação para o identificador: " + id);
+
         var opt = employerRepo.findByEmail(id).map(u->(AbstractUser)u)
                 .or(() -> employerRepo.findById(id).map(u->(AbstractUser)u))
                 .or(() -> employerRepo.findByUsername(id).map(u->(AbstractUser)u))
@@ -67,10 +69,21 @@ public class AuthService {
                 .or(() -> freelancerRepo.findById(id).map(u->(AbstractUser)u))
                 .or(() -> freelancerRepo.findByUsername(id).map(u->(AbstractUser)u));
 
-        var user = opt.orElseThrow(() -> new UnauthorizedException("Credenciais inválidas."));
-        if (!encoder.matches(pw, user.getPassword()))
+        if (opt.isEmpty()) {
+            System.out.println("--- [DEBUG] FALHA: Usuário não encontrado com o identificador fornecido.");
             throw new UnauthorizedException("Credenciais inválidas.");
+        }
 
+        var user = opt.get();
+        System.out.println("--- [DEBUG] SUCESSO: Usuário encontrado: " + user.getUsername());
+
+        // Este é o teste crucial
+        if (!encoder.matches(pw, user.getPassword())) {
+            System.out.println("--- [DEBUG] FALHA: A senha fornecida não corresponde à senha armazenada.");
+            throw new UnauthorizedException("Credenciais inválidas.");
+        }
+
+        System.out.println("--- [DEBUG] SUCESSO: Senha correta. Gerando token para " + user.getUsername());
         return jwtService.generateToken(user);
     }
 }

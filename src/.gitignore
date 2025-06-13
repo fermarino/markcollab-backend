@@ -2,8 +2,9 @@
 target/
 !.mvn/wrapper/maven-wrapper.jar
 .env
+.idea/
 
-src/main/resources/application-secret.properties
+src/main/resources/application.properties
 
 # Arquivos de configuração do IntelliJ IDEA
 .idea/
