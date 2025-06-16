@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/payment")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "https://markcollab-backend.onrender.com")
 public class PaymentController {
 
     @Autowired
