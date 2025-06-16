@@ -40,11 +40,19 @@ public class ProjectService {
 
     /**
      * Retorna um projeto (entidade) pelo seu ID. Lança exceção se não encontrado.
-     * ESTE É O MÉTODO QUE FALTAVA.
      */
     public Project findProjectById(Long projectId) {
         return projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found with id: " + projectId));
+    }
+
+    /**
+     * Retorna um empregador (entidade) pelo seu CPF. Lança exceção se não encontrado.
+     * ESTE É O NOVO MÉTODO ADICIONADO.
+     */
+    public Employer findEmployerByCpf(String employerCpf) {
+        return employerRepository.findById(employerCpf)
+                .orElseThrow(() -> new RuntimeException("Employer not found with cpf: " + employerCpf));
     }
 
     /**
@@ -61,7 +69,7 @@ public class ProjectService {
      * Retorna um único projeto pelo ID e mapeia para DTO.
      */
     public ProjectDTO getProjectById(Long projectId) {
-        Project project = findProjectById(projectId); // Reutilizando o novo método
+        Project project = findProjectById(projectId);
         return mapToDTO(project);
     }
 
@@ -69,8 +77,7 @@ public class ProjectService {
      * Cria e salva um novo projeto, associando-o ao Employer (pelo cpf).
      */
     public ProjectDTO createProject(Project project, String employerCpf) {
-        Employer emp = employerRepository.findById(employerCpf)
-                .orElseThrow(() -> new RuntimeException("Employer not found"));
+        Employer emp = findEmployerByCpf(employerCpf);
         project.setProjectEmployer(emp);
         project.setOpen(true);
         project.setStatus("Aberto");
@@ -82,7 +89,7 @@ public class ProjectService {
      * Atualiza somente o status de um projeto. Se “Concluído”, fecha (open = false).
      */
     public Project updateProjectStatus(Long projectId, String newStatus, String employerCpf) {
-        Project project = findProjectById(projectId); // Reutilizando o novo método
+        Project project = findProjectById(projectId);
 
         if (!project.getProjectEmployer().getCpf().equals(employerCpf)) {
             throw new RuntimeException("Unauthorized action");
@@ -109,7 +116,7 @@ public class ProjectService {
      */
     @Transactional
     public ProjectDTO hireFreelancer(Long projectId, String freelancerCpf, String employerCpf) {
-        Project project = findProjectById(projectId); // Reutilizando o novo método
+        Project project = findProjectById(projectId);
 
         if (!project.getProjectEmployer().getCpf().equals(employerCpf)) {
             throw new RuntimeException("Unauthorized action");
@@ -145,7 +152,7 @@ public class ProjectService {
      * Adiciona uma proposta (Interest) de freelancer a este projeto.
      */
     public Interest addInterest(Long projectId, String freelancerCpf) {
-        Project project = findProjectById(projectId); // Reutilizando o novo método
+        Project project = findProjectById(projectId);
         if (!project.isOpen()) {
             throw new RuntimeException("Project is not open");
         }
@@ -164,7 +171,7 @@ public class ProjectService {
      * Gera descrição automática via IA e salva no projeto.
      */
     public ProjectDTO generateProjectDescription(Long projectId) {
-        Project project = findProjectById(projectId); // Reutilizando o novo método
+        Project project = findProjectById(projectId);
 
         var iaRequest = ProjectIARequestDTO.builder()
                 .projectTitle(project.getProjectTitle())
@@ -183,7 +190,7 @@ public class ProjectService {
      * Atualiza dados gerais de um projeto (título, descrição, specs, preço, prazo, status).
      */
     public Project updateProject(Long projectId, Project updated, String employerCpf) {
-        Project project = findProjectById(projectId); // Reutilizando o novo método
+        Project project = findProjectById(projectId);
 
         if (!project.getProjectEmployer().getCpf().equals(employerCpf)) {
             throw new RuntimeException("Unauthorized action");
@@ -208,7 +215,7 @@ public class ProjectService {
      * Deleta um projeto, somente se o employerCpf bater com o do projeto.
      */
     public void deleteProject(Long projectId, String employerCpf) {
-        Project project = findProjectById(projectId); // Reutilizando o novo método
+        Project project = findProjectById(projectId);
 
         if (!project.getProjectEmployer().getCpf().equals(employerCpf)) {
             throw new RuntimeException("Unauthorized action");
@@ -221,8 +228,7 @@ public class ProjectService {
      * Retorna TODOS os projetos (abertos ou não) de um empregador.
      */
     public List<ProjectDTO> getProjectsByEmployer(String employerCpf) {
-        Employer emp = employerRepository.findById(employerCpf)
-                .orElseThrow(() -> new RuntimeException("Employer not found"));
+        Employer emp = findEmployerByCpf(employerCpf);
 
         List<Project> projetos = projectRepository.findByProjectEmployer_Cpf(employerCpf);
         return projetos.stream()
