@@ -1,6 +1,7 @@
 package com.markcollab.service;
 
 import com.markcollab.dto.ProjectDTO;
+import com.markcollab.dto.ProjectIARequestDTO;
 import com.markcollab.model.Employer;
 import com.markcollab.model.Freelancer;
 import com.markcollab.model.Interest;
@@ -38,6 +39,15 @@ public class ProjectService {
     }
 
     /**
+     * Retorna um projeto (entidade) pelo seu ID. Lança exceção se não encontrado.
+     * ESTE É O MÉTODO QUE FALTAVA.
+     */
+    public Project findProjectById(Long projectId) {
+        return projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found with id: " + projectId));
+    }
+
+    /**
      * Retorna todos os projetos abertos (open = true).
      */
     public List<ProjectDTO> getOpenProjects() {
@@ -51,8 +61,7 @@ public class ProjectService {
      * Retorna um único projeto pelo ID e mapeia para DTO.
      */
     public ProjectDTO getProjectById(Long projectId) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+        Project project = findProjectById(projectId); // Reutilizando o novo método
         return mapToDTO(project);
     }
 
@@ -73,8 +82,7 @@ public class ProjectService {
      * Atualiza somente o status de um projeto. Se “Concluído”, fecha (open = false).
      */
     public Project updateProjectStatus(Long projectId, String newStatus, String employerCpf) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+        Project project = findProjectById(projectId); // Reutilizando o novo método
 
         if (!project.getProjectEmployer().getCpf().equals(employerCpf)) {
             throw new RuntimeException("Unauthorized action");
@@ -95,14 +103,13 @@ public class ProjectService {
     /**
      * Contrata um freelancer para este projeto:
      * define hiredFreelancer, fecha o projeto e atualiza o status de todas as propostas.
-     *
+     * <p>
      * ANOTAÇÃO @Transactional GARANTE que o contexto de persistência fique aberto
      * enquanto iteramos em project.getInterestedFreelancers(), evitando LazyInitializationException.
      */
     @Transactional
     public ProjectDTO hireFreelancer(Long projectId, String freelancerCpf, String employerCpf) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+        Project project = findProjectById(projectId); // Reutilizando o novo método
 
         if (!project.getProjectEmployer().getCpf().equals(employerCpf)) {
             throw new RuntimeException("Unauthorized action");
@@ -138,8 +145,7 @@ public class ProjectService {
      * Adiciona uma proposta (Interest) de freelancer a este projeto.
      */
     public Interest addInterest(Long projectId, String freelancerCpf) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+        Project project = findProjectById(projectId); // Reutilizando o novo método
         if (!project.isOpen()) {
             throw new RuntimeException("Project is not open");
         }
@@ -158,10 +164,9 @@ public class ProjectService {
      * Gera descrição automática via IA e salva no projeto.
      */
     public ProjectDTO generateProjectDescription(Long projectId) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+        Project project = findProjectById(projectId); // Reutilizando o novo método
 
-        var iaRequest = com.markcollab.dto.ProjectIARequestDTO.builder()
+        var iaRequest = ProjectIARequestDTO.builder()
                 .projectTitle(project.getProjectTitle())
                 .projectSpecifications(project.getProjectSpecifications())
                 .projectDeadline("15 dias")
@@ -178,8 +183,7 @@ public class ProjectService {
      * Atualiza dados gerais de um projeto (título, descrição, specs, preço, prazo, status).
      */
     public Project updateProject(Long projectId, Project updated, String employerCpf) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+        Project project = findProjectById(projectId); // Reutilizando o novo método
 
         if (!project.getProjectEmployer().getCpf().equals(employerCpf)) {
             throw new RuntimeException("Unauthorized action");
@@ -204,8 +208,7 @@ public class ProjectService {
      * Deleta um projeto, somente se o employerCpf bater com o do projeto.
      */
     public void deleteProject(Long projectId, String employerCpf) {
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+        Project project = findProjectById(projectId); // Reutilizando o novo método
 
         if (!project.getProjectEmployer().getCpf().equals(employerCpf)) {
             throw new RuntimeException("Unauthorized action");
