@@ -17,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/interests")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "https://markcollab-backend.onrender.com")
 public class InterestController {
 
     private final InterestRepository interestRepository;
