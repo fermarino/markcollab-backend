@@ -1,4 +1,3 @@
-// src/main/java/com/markcollab/controller/AuthController.java
 package com.markcollab.controller;
 
 import com.markcollab.payload.AuthRegisterRequest;
@@ -15,7 +14,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "https://markcollab-backend.onrender.com")
 @RequiredArgsConstructor
 public class AuthController {
 
