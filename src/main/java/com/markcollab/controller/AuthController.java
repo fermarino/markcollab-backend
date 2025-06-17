@@ -14,7 +14,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "https://markcollab-backend.onrender.com")
 @RequiredArgsConstructor
 public class AuthController {
 
