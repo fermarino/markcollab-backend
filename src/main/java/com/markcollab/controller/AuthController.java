@@ -1,4 +1,3 @@
-// src/main/java/com/markcollab/controller/AuthController.java
 package com.markcollab.controller;
 
 import com.markcollab.payload.AuthRegisterRequest;

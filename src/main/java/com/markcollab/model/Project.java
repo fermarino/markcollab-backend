@@ -1,43 +1,54 @@
 package com.markcollab.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-
+import lombok.NoArgsConstructor;
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Set;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "projects")
-@Data
 public class Project {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long projectId;
 
+    @Column(nullable = false, length = 150)
     private String projectTitle;
-    private String projectDescription;
-    private String projectSpecifications;
-    private Double projectPrice;
-    private boolean open;
-    private String status;
 
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String projectDescription;
+
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String projectSpecifications;
+
+    @Column(nullable = false)
+    private Double projectPrice;
+
+    @Column(nullable = false)
     private LocalDate deadline;
 
-    @ManyToOne
-    @JoinColumn(name = "employer_cpf")
+    @Column(nullable = false)
+    private boolean open;
+
+    @Column(nullable = false)
+    private String status;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employer_cpf", nullable = false)
     private Employer projectEmployer;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hired_freelancer_cpf")
     private Freelancer hiredFreelancer;
 
-    /**
-     * Observação: a fetch type padrão para OneToMany é LAZY.
-     * Graças ao @Transactional no service, não haverá LazyInitializationException.
-     */
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
-    private List<Interest> interestedFreelancers;
+    private Set<Interest> interestedFreelancers;
 }
