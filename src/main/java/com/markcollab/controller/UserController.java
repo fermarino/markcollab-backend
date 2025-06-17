@@ -6,16 +6,15 @@ import com.markcollab.model.Employer;
 import com.markcollab.model.Freelancer;
 import com.markcollab.repository.EmployerRepository;
 import com.markcollab.repository.FreelancerRepository;
-import com.markcollab.service.CloudinaryService; // IMPORTADO
+import com.markcollab.service.CloudinaryService;
 import com.markcollab.service.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile; // IMPORTADO
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException; // IMPORTADO
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -26,7 +25,7 @@ public class UserController {
     @Autowired private EmployerRepository employerRepo;
     @Autowired private JwtService jwtService;
     @Autowired private ObjectMapper objectMapper;
-    @Autowired private CloudinaryService cloudinaryService; // INJETADO
+    @Autowired private CloudinaryService cloudinaryService;
 
     @GetMapping("/me")
     public ResponseEntity<?> me(HttpServletRequest req) {
@@ -41,12 +40,10 @@ public class UserController {
     public ResponseEntity<?> updateMe(HttpServletRequest req, @RequestBody Map<String, Object> data) {
         String cpf = extractCpf(req);
 
-        // Lógica para Freelancer
         if (freelancerRepo.existsById(cpf)) {
             Freelancer userToUpdate = freelancerRepo.findById(cpf)
                     .orElseThrow(() -> new UnauthorizedException("Freelancer não encontrado."));
 
-            // Atualiza apenas os campos que vieram na requisição
             if (data.containsKey("name")) {
                 userToUpdate.setName((String) data.get("name"));
             }
@@ -61,12 +58,10 @@ public class UserController {
             return ResponseEntity.ok(updatedUser);
         }
 
-        // Lógica para Employer
         if (employerRepo.existsById(cpf)) {
             Employer userToUpdate = employerRepo.findById(cpf)
                     .orElseThrow(() -> new UnauthorizedException("Employer não encontrado."));
 
-            // Atualiza apenas os campos que vieram na requisição
             if (data.containsKey("name")) {
                 userToUpdate.setName((String) data.get("name"));
             }
@@ -84,21 +79,22 @@ public class UserController {
         throw new UnauthorizedException("Usuário não encontrado para atualização.");
     }
 
-    // === MÉTODO DE UPLOAD ATUALIZADO ===
     @PostMapping("/upload-profile-picture")
     public ResponseEntity<?> uploadProfilePicture(HttpServletRequest req, @RequestParam("profilePicture") MultipartFile file) {
         String cpf = extractCpf(req);
         String publicUrl;
 
         try {
-            // 1. Faz o upload do arquivo para o Cloudinary e obtém a URL segura.
             publicUrl = cloudinaryService.upload(file);
-        } catch (IOException e) {
-            // Em caso de erro no upload, retorna uma resposta de erro para o frontend.
-            return ResponseEntity.internalServerError().body(Map.of("message", "Erro ao fazer upload da imagem."));
+        } catch (Exception e) {
+            System.out.println("### ERRO NO UPLOAD DO CLOUDINARY ###");
+            e.printStackTrace();
+            System.out.println("#####################################");
+            return ResponseEntity
+                    .status(500)
+                    .body(Map.of("message", "Falha no serviço de upload. Verifique os logs do servidor."));
         }
 
-        // 2. Salva a URL no perfil do usuário (Freelancer ou Employer).
         if (freelancerRepo.existsById(cpf)) {
             Freelancer user = freelancerRepo.findById(cpf).get();
             user.setProfilePicture(publicUrl);
@@ -111,10 +107,8 @@ public class UserController {
             throw new UnauthorizedException("Usuário não encontrado.");
         }
 
-        // 3. Retorna uma resposta de sucesso com a nova URL da imagem.
         return ResponseEntity.ok(Map.of("message", "Foto de perfil atualizada com sucesso!", "profilePictureUrl", publicUrl));
     }
-
 
     private String extractCpf(HttpServletRequest req) {
         String h = req.getHeader("Authorization");
