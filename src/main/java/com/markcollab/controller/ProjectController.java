@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/projects")
@@ -45,7 +46,7 @@ public class ProjectController {
     @PostMapping("/{employerCpf}")
     public ResponseEntity<ProjectDTO> createProject(
             @PathVariable String employerCpf,
-            @RequestBody com.markcollab.model.Project project) {
+            @Valid @RequestBody com.markcollab.model.Project project) {
         ProjectDTO saved = projectService.createProject(project, employerCpf);
         return ResponseEntity.ok(saved);
     }
@@ -89,7 +90,7 @@ public class ProjectController {
     @PutMapping("/{projectId}/{employerCpf}")
     public ResponseEntity<?> updateProject(
             @PathVariable Long projectId,
-            @RequestBody com.markcollab.model.Project updatedProject,
+            @Valid @RequestBody com.markcollab.model.Project updatedProject,
             @PathVariable String employerCpf) {
         try {
             com.markcollab.model.Project updated = projectService.updateProject(projectId, updatedProject, employerCpf);
