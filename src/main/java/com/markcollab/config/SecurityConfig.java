@@ -2,6 +2,8 @@ package com.markcollab.config;
 
 import com.markcollab.repository.EmployerRepository;
 import com.markcollab.repository.FreelancerRepository;
+import com.markcollab.service.JwtService;
+import com.markcollab.config.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -36,9 +38,8 @@ public class SecurityConfig {
 
     private final EmployerRepository employerRepository;
     private final FreelancerRepository freelancerRepository;
-    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final JwtService jwtService;
 
-    // Injete a URL do seu frontend a partir do application.properties
     @Value("${frontend.base-url}")
     private String frontendUrl;
 
@@ -46,24 +47,18 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            // Informa ao Spring Security para usar a configuração de CORS definida no bean "corsConfigurationSource"
             .cors(withDefaults())
             .authorizeHttpRequests(auth -> auth
-                // 1. Permite requisições OPTIONS (preflight CORS) para qualquer caminho
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                
-                // 2. Rotas públicas (autenticação e webhooks)
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/webhooks/**").permitAll() // <-- Caminho do webhook corrigido
-                
-                // 3. Todas as outras requisições exigem autenticação
+                .requestMatchers("/api/webhooks/**").permitAll()
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -71,10 +66,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
-        // ERRO ESTAVA AQUI: A origem permitida deve ser a URL do seu FRONTEND
         configuration.setAllowedOrigins(List.of(frontendUrl, "http://localhost:5173"));
-        
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);
@@ -87,7 +79,6 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         return identifier -> {
-            // A busca por múltiplos campos continua a mesma
             return employerRepository.findByEmail(identifier)
                     .map(user -> (UserDetails) user)
                     .or(() -> employerRepository.findByUsername(identifier).map(user -> (UserDetails) user))
@@ -113,5 +104,11 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
+    }
+
+    // ✅ Registra o JwtAuthenticationFilter como bean para evitar dependência circular
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtService, userDetailsService());
     }
 }
