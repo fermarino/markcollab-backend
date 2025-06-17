@@ -8,41 +8,37 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-@Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
-    // Lista de caminhos que este filtro deve IGNORAR COMPLETAMENTE.
-    // O método shouldNotFilter verificará se a requisição é para uma dessas URLs.
     private static final List<String> PATHS_TO_EXCLUDE_FROM_JWT_FILTER = Arrays.asList(
             "/api/auth/register",
             "/api/auth/authenticate",
-            "/api/mercadopago/webhook" // <--- AQUI ESTÁ A CHAVE: Adicione o endpoint do webhook
+            "/api/mercadopago/webhook"
     );
 
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) throws ServletException {
         String requestURI = request.getRequestURI();
-        System.out.println("DEBUG JWT Filter: Avaliando URI: " + requestURI); // <--- NOVO LOG AQUI
+        System.out.println("DEBUG JWT Filter: Avaliando URI: " + requestURI);
         boolean shouldExclude = PATHS_TO_EXCLUDE_FROM_JWT_FILTER.contains(requestURI);
-        System.out.println("DEBUG JWT Filter: Deve excluir (" + requestURI + ")? " + shouldExclude); // <--- NOVO LOG AQUI
+        System.out.println("DEBUG JWT Filter: Deve excluir (" + requestURI + ")? " + shouldExclude);
         return shouldExclude;
     }
 
@@ -53,13 +49,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Se shouldNotFilter retornar true, este método nem será chamado para a requisição.
-        // Portanto, a lógica de verificação do JWT só ocorrerá para as requisições que precisam dela.
-
         final String authHeader = request.getHeader("Authorization");
 
-        // Se não houver cabeçalho de autorização ou não começar com "Bearer ",
-        // continue a cadeia de filtros.
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -71,16 +62,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             username = jwtService.extractUsername(jwt);
 
-            // Se o username for válido e não houver autenticação já no SecurityContext
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-                // Se o token for válido para o userDetails
                 if (jwtService.isTokenValid(jwt, userDetails)) {
-                    // Crie um objeto de autenticação e o coloque no contexto de segurança
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
-                            null, // Não temos credenciais aqui, pois o token já é a credencial
+                            null,
                             userDetails.getAuthorities()
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -89,21 +77,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
             filterChain.doFilter(request, response);
         } catch (ExpiredJwtException e) {
-            System.out.println("❌ Erro na validação do Token JWT: Token expirado. " + e.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 Unauthorized
+            System.out.println("❌ Token expirado: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Token expirado");
-            return;
         } catch (MalformedJwtException | SignatureException e) {
-            System.out.println("❌ Erro na validação do Token JWT: Token inválido ou assinatura corrompida. " + e.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 Unauthorized
+            System.out.println("❌ Token inválido: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Token inválido");
-            return;
         } catch (Exception e) {
-            System.out.println("❌ Erro inesperado na validação do Token JWT: " + e.getMessage());
+            System.out.println("❌ Erro inesperado no filtro JWT: " + e.getMessage());
             e.printStackTrace();
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR); // 500 Internal Server Error
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("Erro interno ao processar token");
-            return;
         }
     }
 }
