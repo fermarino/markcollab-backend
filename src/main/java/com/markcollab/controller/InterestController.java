@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/interests")
@@ -37,7 +38,7 @@ public class InterestController {
      * POST /api/interests/
      */
     @PostMapping("/")
-    public ResponseEntity<Interest> criarProposta(@RequestBody InterestRequest proposta) {
+    public ResponseEntity<Interest> criarProposta(@Valid @RequestBody InterestRequest proposta) {
         Project project = projectRepository.findById(proposta.getProjectId())
                 .orElseThrow(() -> new ResourceNotFoundException("Projeto não encontrado"));
 

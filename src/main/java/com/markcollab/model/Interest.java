@@ -2,6 +2,7 @@ package com.markcollab.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "interests")
@@ -26,7 +27,9 @@ public class Interest {
     @Column
     private String proposalValue;
 
-    @Column
+
+    @Size(max = 5000, message = "A descrição da proposta não pode exceder 5000 caracteres.")
+    @Column(length = 5000) 
     private String proposalDescription;
 
     @Column
