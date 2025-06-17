@@ -1,5 +1,6 @@
 package com.markcollab.service;
 
+import com.markcollab.dto.EmailRequestDTO;
 import com.markcollab.dto.ProjectDTO;
 import com.markcollab.dto.ProjectIARequestDTO;
 import com.markcollab.model.Employer;
@@ -24,40 +25,33 @@ public class ProjectService {
     private final FreelancerRepository freelancerRepository;
     private final InterestRepository interestRepository;
     private final IAService iaService;
+    private final EmailService emailService;
 
     @Autowired
     public ProjectService(ProjectRepository projectRepository,
                           EmployerRepository employerRepository,
                           FreelancerRepository freelancerRepository,
                           InterestRepository interestRepository,
-                          IAService iaService) {
+                          IAService iaService,
+                          EmailService emailService) {
         this.projectRepository = projectRepository;
         this.employerRepository = employerRepository;
         this.freelancerRepository = freelancerRepository;
         this.interestRepository = interestRepository;
         this.iaService = iaService;
+        this.emailService = emailService;
     }
 
-    /**
-     * Retorna um projeto (entidade) pelo seu ID. Lança exceção se não encontrado.
-     */
     public Project findProjectById(Long projectId) {
         return projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found with id: " + projectId));
     }
 
-    /**
-     * Retorna um empregador (entidade) pelo seu CPF. Lança exceção se não encontrado.
-     * ESTE É O NOVO MÉTODO ADICIONADO.
-     */
     public Employer findEmployerByCpf(String employerCpf) {
         return employerRepository.findById(employerCpf)
                 .orElseThrow(() -> new RuntimeException("Employer not found with cpf: " + employerCpf));
     }
 
-    /**
-     * Retorna todos os projetos abertos (open = true).
-     */
     public List<ProjectDTO> getOpenProjects() {
         return projectRepository.findByOpenTrue()
                 .stream()
@@ -65,17 +59,11 @@ public class ProjectService {
                 .toList();
     }
 
-    /**
-     * Retorna um único projeto pelo ID e mapeia para DTO.
-     */
     public ProjectDTO getProjectById(Long projectId) {
         Project project = findProjectById(projectId);
         return mapToDTO(project);
     }
 
-    /**
-     * Cria e salva um novo projeto, associando-o ao Employer (pelo cpf).
-     */
     public ProjectDTO createProject(Project project, String employerCpf) {
         Employer emp = findEmployerByCpf(employerCpf);
         project.setProjectEmployer(emp);
@@ -85,9 +73,6 @@ public class ProjectService {
         return mapToDTO(saved);
     }
 
-    /**
-     * Atualiza somente o status de um projeto. Se “Concluído”, fecha (open = false).
-     */
     public Project updateProjectStatus(Long projectId, String newStatus, String employerCpf) {
         Project project = findProjectById(projectId);
 
@@ -107,18 +92,12 @@ public class ProjectService {
         return projectRepository.save(project);
     }
 
-    /**
-     * Contrata um freelancer para este projeto:
-     * define hiredFreelancer, fecha o projeto e atualiza o status de todas as propostas.
-     * <p>
-     * ANOTAÇÃO @Transactional GARANTE que o contexto de persistência fique aberto
-     * enquanto iteramos em project.getInterestedFreelancers(), evitando LazyInitializationException.
-     */
     @Transactional
     public ProjectDTO hireFreelancer(Long projectId, String freelancerCpf, String employerCpf) {
         Project project = findProjectById(projectId);
+        Employer employer = project.getProjectEmployer();
 
-        if (!project.getProjectEmployer().getCpf().equals(employerCpf)) {
+        if (!employer.getCpf().equals(employerCpf)) {
             throw new RuntimeException("Unauthorized action");
         }
         if (!project.isOpen()) {
@@ -128,13 +107,10 @@ public class ProjectService {
         Freelancer freelancer = freelancerRepository.findById(freelancerCpf)
                 .orElseThrow(() -> new RuntimeException("Freelancer not found"));
 
-        // Define o freelancer contratado, fecha o projeto e altera o status
         project.setHiredFreelancer(freelancer);
         project.setOpen(false);
         project.setStatus("Em andamento");
 
-        // Atualiza o status de cada Interest (proposta) deste projeto
-        // (Como estamos dentro de @Transactional, a lista vem carregada e podemos iterar)
         for (Interest interest : project.getInterestedFreelancers()) {
             if (interest.getFreelancer().getCpf().equals(freelancerCpf)) {
                 interest.setStatus("Aprovado");
@@ -145,12 +121,12 @@ public class ProjectService {
         }
 
         Project saved = projectRepository.save(project);
+
+        sendHiringConfirmationEmails(employer, freelancer, saved);
+
         return mapToDTO(saved);
     }
 
-    /**
-     * Adiciona uma proposta (Interest) de freelancer a este projeto.
-     */
     public Interest addInterest(Long projectId, String freelancerCpf) {
         Project project = findProjectById(projectId);
         if (!project.isOpen()) {
@@ -167,9 +143,6 @@ public class ProjectService {
         return interestRepository.save(interest);
     }
 
-    /**
-     * Gera descrição automática via IA e salva no projeto.
-     */
     public ProjectDTO generateProjectDescription(Long projectId) {
         Project project = findProjectById(projectId);
 
@@ -186,9 +159,6 @@ public class ProjectService {
         return mapToDTO(updated);
     }
 
-    /**
-     * Atualiza dados gerais de um projeto (título, descrição, specs, preço, prazo, status).
-     */
     public Project updateProject(Long projectId, Project updated, String employerCpf) {
         Project project = findProjectById(projectId);
 
@@ -207,13 +177,9 @@ public class ProjectService {
             project.setOpen(false);
         }
 
-        Project saved = projectRepository.save(project);
-        return saved;
+        return projectRepository.save(project);
     }
 
-    /**
-     * Deleta um projeto, somente se o employerCpf bater com o do projeto.
-     */
     public void deleteProject(Long projectId, String employerCpf) {
         Project project = findProjectById(projectId);
 
@@ -224,9 +190,6 @@ public class ProjectService {
         projectRepository.delete(project);
     }
 
-    /**
-     * Retorna TODOS os projetos (abertos ou não) de um empregador.
-     */
     public List<ProjectDTO> getProjectsByEmployer(String employerCpf) {
         Employer emp = findEmployerByCpf(employerCpf);
 
@@ -236,9 +199,6 @@ public class ProjectService {
                 .toList();
     }
 
-    /**
-     * Retorna TODOS os projetos em que um determinado freelancer foi contratado.
-     */
     public List<ProjectDTO> getProjectsByFreelancer(String freelancerCpf) {
         Freelancer f = freelancerRepository.findById(freelancerCpf)
                 .orElseThrow(() -> new RuntimeException("Freelancer not found"));
@@ -249,11 +209,7 @@ public class ProjectService {
                 .toList();
     }
 
-    /**
-     * Mapeia uma entidade Project inteira para o DTO que expomos via JSON.
-     */
     private ProjectDTO mapToDTO(Project project) {
-        // Mapeia dados do empregador
         com.markcollab.dto.EmployerDTO empDto = null;
         if (project.getProjectEmployer() != null) {
             var e = project.getProjectEmployer();
@@ -264,7 +220,6 @@ public class ProjectService {
             empDto.setCompanyName(e.getCompanyName());
         }
 
-        // Mapeia dados do freelancer contratado (se houver)
         com.markcollab.dto.FreelancerDTO frDto = null;
         if (project.getHiredFreelancer() != null) {
             var f = project.getHiredFreelancer();
@@ -289,5 +244,28 @@ public class ProjectService {
                 .projectEmployer(empDto)
                 .hiredFreelancer(frDto)
                 .build();
+    }
+
+    private void sendHiringConfirmationEmails(Employer employer, Freelancer freelancer, Project project) {
+        EmailRequestDTO requestDTO = new EmailRequestDTO();
+
+        EmailRequestDTO.ContactInfo employerInfo = new EmailRequestDTO.ContactInfo();
+        employerInfo.setName(employer.getName());
+        employerInfo.setEmail(employer.getEmail());
+
+        EmailRequestDTO.ContactInfo freelancerInfo = new EmailRequestDTO.ContactInfo();
+        freelancerInfo.setName(freelancer.getName());
+        freelancerInfo.setEmail(freelancer.getEmail());
+
+        // 4. Criar e popular as informações do Projeto
+        EmailRequestDTO.ProjectInfo projectInfo = new EmailRequestDTO.ProjectInfo();
+        projectInfo.setTitle(project.getProjectTitle());
+        projectInfo.setDescription(project.getProjectDescription()); // Usando a descrição do projeto
+
+        requestDTO.setEmployer(employerInfo);
+        requestDTO.setFreelancer(freelancerInfo);
+        requestDTO.setProject(projectInfo);
+
+        emailService.enviarEmail(requestDTO);
     }
 }
