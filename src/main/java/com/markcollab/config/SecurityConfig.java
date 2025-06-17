@@ -3,7 +3,6 @@ package com.markcollab.config;
 import com.markcollab.repository.EmployerRepository;
 import com.markcollab.repository.FreelancerRepository;
 import com.markcollab.service.JwtService;
-import com.markcollab.config.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -51,7 +50,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/webhooks/**").permitAll()
+                .requestMatchers("/api/mercadopago/**").permitAll() // ROTA DO WEBHOOK CORRIGIDA
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
@@ -106,7 +105,6 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    // ✅ Registra o JwtAuthenticationFilter como bean para evitar dependência circular
     @Bean
     public JwtAuthenticationFilter jwtAuthenticationFilter() {
         return new JwtAuthenticationFilter(jwtService, userDetailsService());
