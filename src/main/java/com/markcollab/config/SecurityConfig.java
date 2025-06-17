@@ -39,7 +39,7 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
 
     // Injete a URL do seu frontend a partir do application.properties
-    @Value("${frontend.url}")
+    @Value("${frontend.base-url}")
     private String frontendUrl;
 
     @Bean
